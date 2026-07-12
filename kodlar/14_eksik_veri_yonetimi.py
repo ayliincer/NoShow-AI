@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+BILINMIYOR_ETIKETI = "Bilinmiyor"
 
 
 def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
@@ -122,7 +123,9 @@ def egitim_parametrelerini_hesapla(egitim_veri: pd.DataFrame) -> dict:
         if not gecerli_farklar.empty:
             parametreler["lead_time_median_days"] = gecerli_farklar.median()
         else:
-            parametreler["lead_time_median_days"] = 0.0  # Varsayılan değer
+            raise ValueError(
+    "Lead Time medyanı hesaplanamadı."
+) # Varsayılan değer
 
     return parametreler
 
@@ -154,10 +157,10 @@ def eksik_verileri_doldur(veri: pd.DataFrame, parametreler: dict) -> pd.DataFram
             veri_dolu.loc[maske_age_hesapla, "age"] = (
                 (veri_dolu.loc[maske_age_hesapla, "appointment_date"] - 
                  veri_dolu.loc[maske_age_hesapla, "date_of_birth"]).dt.days / 365.25
-            ).round(0)
+            ).round().astype(int)
 
         # Kalan eksik yaşları eğitim medyanı ile doldurma
-        yas_medyani = parametreler.get("age_median", 11.0)
+        yas_medyani = parametreler["age_median"]
         veri_dolu["age"] = veri_dolu["age"].fillna(yas_medyani)
 
     if "date_of_birth" in veri_dolu.columns:
@@ -171,7 +174,7 @@ def eksik_verileri_doldur(veri: pd.DataFrame, parametreler: dict) -> pd.DataFram
 
     # 2. Servis Kayıt Tarihi (entry_service_date) Doldurulması
     if "entry_service_date" in veri_dolu.columns:
-        medyan_gun_farki = parametreler.get("lead_time_median_days", 4.0)
+        medyan_gun_farki = parametreler["lead_time_median_days"]
         maske_entry_hesapla = veri_dolu["entry_service_date"].isnull()
         if maske_entry_hesapla.any():
             veri_dolu.loc[maske_entry_hesapla, "entry_service_date"] = (
@@ -183,14 +186,14 @@ def eksik_verileri_doldur(veri: pd.DataFrame, parametreler: dict) -> pd.DataFram
     meteorolojik_sutunlar = ["average_temp_day", "average_rain_day", "max_temp_day", "max_rain_day"]
     for sutun in meteorolojik_sutunlar:
         if sutun in veri_dolu.columns:
-            medyan_deger = parametreler.get(f"{sutun}_median", 0.0)
+            medyan_deger = parametreler[f"{sutun}_median"]
             veri_dolu[sutun] = veri_dolu[sutun].fillna(medyan_deger)
 
     # 4. Kategorik Değişkenlerin Bilinmiyor (Unknown) ile Doldurulması
     kategorik_doldurulacak = ["icd", "specialty", "city", "disability"]
     for sutun in kategorik_doldurulacak:
         if sutun in veri_dolu.columns:
-            veri_dolu[sutun] = veri_dolu[sutun].fillna("Bilinmiyor")
+            veri_dolu[sutun] = veri_dolu[sutun].fillna(BILINMIYOR_ETIKETI)
 
     return veri_dolu
 

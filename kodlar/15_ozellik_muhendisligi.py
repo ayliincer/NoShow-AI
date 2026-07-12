@@ -96,19 +96,31 @@ def akademik_rapor_yazdir(ham_veri: pd.DataFrame, yeni_veri: pd.DataFrame, anoma
     print(f"AKADEMİK RAPOR: {kume_adi.upper()} VERİ KÜMESİ ÖZELLİK MÜHENDİSLİĞİ (FEATURE ENGINEERING)")
     print("=" * 110)
 
-    eski_sutunlar = set(ham_veri.columns)
-    yeni_sutunlar = set(yeni_veri.columns)
-    eklenen_sutunlar = yeni_sutunlar - eski_sutunlar
+    eklenen_sutunlar = [
+        "lead_time",
+        "is_same_day",
+        "appointment_day_of_week",
+        "is_weekend",
+        "appointment_hour",
+        "temp_range",
+        "rain_range",
+        "is_rainy"
+    ]
+
+    mevcut_eklenenler = [
+        sutun for sutun in eklenen_sutunlar
+        if sutun in yeni_veri.columns
+    ]
 
     print(f"Toplam Satır Sayısı                 : {len(yeni_veri):,}")
-    print(f"Başlangıç Sütun Sayısı              : {len(eski_sutunlar)}")
-    print(f"Nihai Sütun Sayısı                  : {len(yeni_sutunlar)}")
-    print(f"Eklenen Yeni Özellik Sayısı         : {len(eklenen_sutunlar)}")
+    print(f"Başlangıç Sütun Sayısı              : {len(ham_veri.columns)}")
+    print(f"Nihai Sütun Sayısı                  : {len(yeni_veri.columns)}")
+    print(f"Eklenen Yeni Özellik Sayısı         : {len(mevcut_eklenenler)}")
     print(f"Kronolojik Anomali (Düzeltilen)     : {anomali_sayisi} gözlem (Kırpılarak 0 yapıldı)")
     print("-" * 110)
     print("EKLENEN YENİ ÖZELLİKLER VE TİPLERİ:")
     print("-" * 45)
-    for sutun in eklenen_sutunlar:
+    for sutun in mevcut_eklenenler:
         print(f"- {sutun:<30} | Veri Tipi: {str(yeni_veri[sutun].dtype)}")
     print("=" * 110)
 
