@@ -247,6 +247,17 @@ def akademik_rapor_yazdir(ham_veri: pd.DataFrame, dolu_veri: pd.DataFrame, kume_
     print(f"Toplam Gözlem (Satır) Sayısı: {toplam_satir:,}")
     print(f"Toplam Öznitelik (Sütun) Sayısı (Başlangıç): {ham_veri.shape[1]}")
     print(f"Toplam Öznitelik (Sütun) Sayısı (Nihai): {dolu_veri.shape[1]}")
+
+    print(f"Yeni Oluşturulan Özellik Sayısı : {dolu_veri.shape[1] - ham_veri.shape[1]}")
+
+    print("\nEklenen Missing Indicator Özellikleri:")
+    print("- age_nan")
+    print("- entry_service_date_nan")
+    print("- average_temp_day_nan")
+    print("- average_rain_day_nan")
+    print("- max_temp_day_nan")
+    print("- max_rain_day_nan")
+
     print("=" * 110)
 
 
@@ -312,6 +323,10 @@ def main():
     # Göstergelerin eklenmesi
     egitim_gostergeli = eksiklik_gostergelerini_ekle(egitim_analiz, gosterge_sutunlari)
     test_gostergeli = eksiklik_gostergelerini_ekle(test_analiz, gosterge_sutunlari)
+    print("\nEklenen Missing Indicator Sütunları:")
+
+    for sutun in gosterge_sutunlari:
+        print(f"- {sutun}_nan")
 
     # Doldurma parametrelerinin yalnızca EĞİTİM seti üzerinden hesaplanması (Leakage Önlemi)
     doldurma_parametreleri = egitim_parametrelerini_hesapla(egitim_gostergeli)
@@ -327,6 +342,10 @@ def main():
     # Doldurulmuş ve gösterge eklenmiş veri setlerinin kaydedilmesi
     veriyi_kaydet(egitim_dolu, egitim_yolu)
     veriyi_kaydet(test_dolu, test_yolu)
+    print("\nNot:")
+    print("Eksik değer doldurma işlemleri yalnızca eğitim verisi üzerinde öğrenilen stratejiler kullanılarak gerçekleştirilmiştir.")
+    print("Test veri kümesinde eğitimden öğrenilen aynı dönüşüm kuralları uygulanmıştır.")
+    print("Bu yaklaşım veri sızıntısını (Data Leakage) önlemek amacıyla tercih edilmiştir.")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 
 
-def veri_setini_yukle(dosya_yolu: str) -> pd.DataFrame:
+def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
     """
     Veri setini hiçbir ön işleme, dönüşüm veya veri manipülasyonu
     uygulamadan ham haliyle yükler.
@@ -30,6 +30,8 @@ def sayisal_degisken_istatistikleri(veri: pd.DataFrame):
 
     # Veri setindeki sayısal (sürekli ve kesikli) değişkenler izole edilir
     sayisal_sutunlar = veri.select_dtypes(include=[np.number]).columns.tolist()
+    print(f"Toplam Sayısal Değişken Sayısı : {len(sayisal_sutunlar)}")
+    print()
 
     # İlerleyen süreçte ID veya ikili (binary) kodlanmış bayrakları bu aşamada 
     # matematiksel olarak dışarıda bırakmak adına ham listeden filtreleme yapılabilir.
@@ -47,7 +49,12 @@ def sayisal_degisken_istatistikleri(veri: pd.DataFrame):
         ortalama = seri.mean()
         medyan = seri.median()
         standart_sapma = seri.std()
+        if ortalama != 0:
+            degisim_katsayisi = standart_sapma / ortalama
+        else:
+            degisim_katsayisi = np.nan
         minimum_deger = seri.min()
+
         
         # Çeyreklikler hesaplanır
         q1 = seri.quantile(0.25)
@@ -58,6 +65,7 @@ def sayisal_degisken_istatistikleri(veri: pd.DataFrame):
         # Dağılımın şekil parametreleri (Çarpıklık ve Basıklık) hesaplanır
         carpiklik = seri.skew()
         basiklik = seri.kurtosis()
+        
 
         # Sonuçlar sözlük yapısında toplanır
         sutun_ozeti = {
@@ -67,6 +75,7 @@ def sayisal_degisken_istatistikleri(veri: pd.DataFrame):
             "Ortalama": ortalama,
             "Medyan": medyan,
             "Std Sapma": standart_sapma,
+            "CV": degisim_katsayisi,
             "Minimum": minimum_deger,
             "Q1 (%25)": q1,
             "Q3 (%75)": q3,

@@ -133,43 +133,57 @@ def model_pipeline_lerini_olustur(y_train: pd.Series) -> dict:
     print("=" * 90)
 
     pipelines = {
-        "Logistic Regression": ImbPipeline([
-            ("scaler", StandardScaler()),
-            ("smote", SMOTE(random_state=42)),
-            ("model", LogisticRegression(max_iter=1000, random_state=42)),
-        ]),
-        "Decision Tree": ImbPipeline([
-            ("smote", SMOTE(random_state=42)),
-            ("model", DecisionTreeClassifier(random_state=42)),
-        ]),
-        "Random Forest": ImbPipeline([
-            ("smote", SMOTE(random_state=42)),
-            ("model", RandomForestClassifier(random_state=42, n_jobs=-1)),
-        ]),
-        "XGBoost": ImbPipeline([
-            ("model", XGBClassifier(
-                scale_pos_weight=scale_pos_weight,
-                eval_metric="aucpr",
-                random_state=42,
-                n_jobs=-1,
-            )),
-        ]),
-        "LightGBM": ImbPipeline([
-            ("model", LGBMClassifier(
-                class_weight="balanced",
-                random_state=42,
-                n_jobs=-1,
-                verbosity=-1,
-            )),
-        ]),
-        "CatBoost": ImbPipeline([
-            ("model", CatBoostClassifier(
-                auto_class_weights="Balanced",
-                random_state=42,
-                verbose=False,
-            )),
-        ]),
-    }
+    "Logistic Regression": ImbPipeline([
+        ("scaler", StandardScaler()),
+        ("smote", SMOTE(random_state=42)),
+        ("model", LogisticRegression(
+            max_iter=1000,
+            random_state=42
+        )),
+    ]),
+
+    "Decision Tree": ImbPipeline([
+        ("smote", SMOTE(random_state=42)),
+        ("model", DecisionTreeClassifier(
+            random_state=42
+        )),
+    ]),
+
+    "Random Forest": ImbPipeline([
+        ("smote", SMOTE(random_state=42)),
+        ("model", RandomForestClassifier(
+            random_state=42,
+            n_jobs=-1
+        )),
+    ]),
+
+    "XGBoost": ImbPipeline([
+        ("model", XGBClassifier(
+            scale_pos_weight=scale_pos_weight,
+            eval_metric="aucpr",
+            random_state=42,
+            n_jobs=-1,
+        )),
+    ]),
+
+    "LightGBM": ImbPipeline([
+        ("model", LGBMClassifier(
+            class_weight="balanced",
+            random_state=42,
+            n_jobs=-1,
+            verbosity=-1,
+        )),
+    ]),
+
+    "CatBoost": ImbPipeline([
+        ("model", CatBoostClassifier(
+            auto_class_weights="Balanced",
+            random_state=42,
+            verbose=False,
+            allow_writing_files=False
+        )),
+    ]),
+}
 
     return pipelines
 
@@ -192,8 +206,13 @@ def capraz_dogrulama_calistir(pipelines: dict, X_train: pd.DataFrame, y_train: p
     print("=" * 90)
 
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    metrikler = ["roc_auc", "average_precision", "f1", "neg_brier_score"]
-
+    metrikler = [
+    "roc_auc",
+    "average_precision",
+    "f1",
+    "recall",
+    "neg_brier_score",
+]
     sonuclar = []
     for isim, pipeline in pipelines.items():
         print(f"\nÇalıştırılıyor: {isim} ...")
@@ -216,10 +235,34 @@ def capraz_dogrulama_calistir(pipelines: dict, X_train: pd.DataFrame, y_train: p
 
     sonuc_tablosu = pd.DataFrame(sonuclar)
 
+    sonuc_tablosu["ROC_AUC_Sayisal"] = (
+        sonuc_tablosu["roc_auc"]
+        .str.extract(r"([0-9.]+)", expand=False)
+        .astype(float)
+    )
+
+    sonuc_tablosu = (
+        sonuc_tablosu
+        .sort_values(by="ROC_AUC_Sayisal", ascending=False)
+        .drop(columns="ROC_AUC_Sayisal")
+        .reset_index(drop=True)
+    )
+
     print("\n" + "=" * 90)
     print("ÇAPRAZ DOĞRULAMA SONUÇ TABLOSU (EĞİTİM SETİ)")
     print("=" * 90)
     print(sonuc_tablosu.to_string(index=False))
+    print("=" * 90)
+
+    print(f"\nToplam Karşılaştırılan Model Sayısı : {len(pipelines)}")
+
+    en_iyi = sonuc_tablosu.iloc[0]
+
+    print("-" * 90)
+    print("ÇAPRAZ DOĞRULAMA ŞAMPİYONU")
+    print("-" * 90)
+    print(f"Model   : {en_iyi['Model']}")
+    print(f"ROC_AUC : {en_iyi['roc_auc']}")
     print("=" * 90)
 
     return sonuc_tablosu

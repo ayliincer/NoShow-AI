@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def veri_setini_yukle(dosya_yolu: str) -> pd.DataFrame:
+def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
     """
     Veri setini hiçbir ön işleme, dönüşüm veya veri manipülasyonu
     uygulamadan ham haliyle yükler.
@@ -47,6 +47,7 @@ def veri_seti_genel_bakis(veri: pd.DataFrame):
     print(f"Toplam Satır Sayısı : {satir_sayisi:,}")
     print(f"Toplam Sütun Sayısı : {sutun_sayisi}")
     print(f"Bellek Kullanımı    : {bellek_kullanimi:.2f} MB")
+    print(f"Toplam Hücre Sayısı : {satir_sayisi * sutun_sayisi:,}")
 
     print("\n" + "-" * 90)
     print("İLK 5 GÖZLEM")

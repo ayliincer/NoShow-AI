@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def ham_veri_setini_yukle(dosya_yolu: str) -> pd.DataFrame:
+def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
     """
     Belirtilen dizindeki CSV dosyasını, üzerinde hiçbir dönüştürme 
     veya filtreleme işlemi yapmadan ham haliyle yükler.
@@ -24,7 +24,7 @@ def veri_sizintisi_risk_degerlendirmesi(veri: pd.DataFrame):
     veri sızıntısı risk durumunu (Düşük/Orta/Yüksek) gerekçesiyle raporlar.
     """
     print("=" * 90)
-    print("ANALİZ: HAM VERİ KRONOLOJİK VERİ SIZINTISI (DATA LEAKAGE) DEĞERLENDİRMESİ")
+    print("ANALİZ:KRONOLOJİK VERİ SIZINTISI (DATA LEAKAGE) RİSK DEĞERLENDİRMESİ")
     print("=" * 90)
 
     # Veri setinde ampirik olarak varlığı tescillenmiş tüm sütunlar listelenir.
@@ -184,6 +184,7 @@ def veri_sizintisi_risk_degerlendirmesi(veri: pd.DataFrame):
 
     # Sonuçların pandas DataFrame yapısına aktarılması
     rapor_tablosu = pd.DataFrame(risk_matrisi)
+    risk_ozeti = rapor_tablosu["Risk Durumu"].value_counts()
     
     # Mevcut veri setindeki sütun isimleri ile eşleşen alanlar doğrulanır
     mevcut_sutunlar = veri.columns.tolist()
@@ -196,6 +197,12 @@ def veri_sizintisi_risk_degerlendirmesi(veri: pd.DataFrame):
     pd.set_option('display.width', 1000)
     
     print(rapor_tablosu.to_string(index=False))
+
+    print("\nNot:")
+    print("Bu analiz yalnızca veri sızıntısı (Data Leakage) riski taşıyan değişkenleri belirlemek amacıyla gerçekleştirilmiştir.")
+    print("Bu aşamada herhangi bir değişken veri setinden çıkarılmamıştır.")
+    print("Nihai değişken seçimi modelleme öncesindeki özellik seçimi aşamasında gerçekleştirilecektir.")
+
     print("=" * 90)
 
 

@@ -11,7 +11,7 @@ from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, brier_score_loss
+from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, recall_score, brier_score_loss
 
 
 def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
@@ -82,27 +82,55 @@ def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.Data
 
     modeller = {
         "Logistic Regression": {
-            "model": LogisticRegression(max_iter=1000, class_weight="balanced", random_state=42),
+            "model": LogisticRegression(
+                max_iter=3000,
+                solver="lbfgs",
+                class_weight="balanced",
+                random_state=42
+            ),
             "veri": (X_tren_olcekli, X_test_olcekli)
         },
+
         "Decision Tree": {
             "model": DecisionTreeClassifier(random_state=42),
             "veri": (X_tren, X_test)
         },
+
         "Random Forest": {
-            "model": RandomForestClassifier(random_state=42, n_jobs=-1),
+            "model": RandomForestClassifier(
+                random_state=42,
+                n_jobs=-1
+            ),
             "veri": (X_tren, X_test)
         },
+
         "XGBoost": {
-            "model": XGBClassifier(scale_pos_weight=scale_pos_weight, eval_metric="aucpr", random_state=42, n_jobs=-1),
+            "model": XGBClassifier(
+                scale_pos_weight=scale_pos_weight,
+                eval_metric="aucpr",
+                random_state=42,
+                n_jobs=-1
+            ),
             "veri": (X_tren, X_test)
         },
+
         "LightGBM": {
-            "model": LGBMClassifier(class_weight="balanced", random_state=42, n_jobs=-1, verbosity=-1),
+            "model": LGBMClassifier(
+                class_weight="balanced",
+                random_state=42,
+                n_jobs=-1,
+                verbosity=-1
+            ),
             "veri": (X_tren, X_test)
         },
+
         "CatBoost": {
-            "model": CatBoostClassifier(auto_class_weights="Balanced", random_state=42, verbose=False),
+            "model": CatBoostClassifier(
+                auto_class_weights="Balanced",
+                random_state=42,
+                verbose=False,
+                allow_writing_files=False
+            ),
             "veri": (X_tren, X_test)
         }
     }
@@ -122,6 +150,7 @@ def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.Data
         roc_auc = roc_auc_score(y_test, tahmin_olasiliklari)
         average_precision = average_precision_score(y_test, tahmin_olasiliklari)
         f1 = f1_score(y_test, sinif_tahminleri)
+        recall = recall_score(y_test, sinif_tahminleri)
         brier = brier_score_loss(y_test, tahmin_olasiliklari)
 
         dis_dogrulama_sonuclari.append({
@@ -129,16 +158,38 @@ def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.Data
             "Dış Test ROC-AUC": roc_auc,
             "Dış Test PR-AUC (AP)": average_precision,
             "Dış Test F1-Skoru (t=0.5)": f1,
+            "Dış Test Recall": recall,
             "Dış Test Brier Skoru": brier
         })
 
     rapor_tablosu = pd.DataFrame(dis_dogrulama_sonuclari)
+    rapor_tablosu = (
+    rapor_tablosu
+    .sort_values(by="Dış Test ROC-AUC", ascending=False)
+    .reset_index(drop=True)
+    )
     
     print("\n" + "=" * 110)
     print("NİHAİ DIŞ DOĞRULAMA PERFORMANS TABLOSU (SAKLI TEST SETİ)")
     print("=" * 110)
     print(rapor_tablosu.to_string(index=False))
     print("=" * 110)
+
+    # En başarılı modeli otomatik raporla
+    en_iyi = rapor_tablosu.iloc[0]
+
+    print("\n" + "-" * 110)
+    print("NİHAİ EN BAŞARILI MODEL")
+    print("-" * 110)
+    print(f"Model   : {en_iyi['Model']}")
+    print(f"ROC-AUC : {en_iyi['Dış Test ROC-AUC']:.4f}")
+    print(f"PR-AUC  : {en_iyi['Dış Test PR-AUC (AP)']:.4f}")
+    print("=" * 110)
+
+    print("\nNot:")
+    print("• ROC-AUC ve PR-AUC değerleri büyük oldukça modelin ayırt etme performansı artmaktadır.")
+    print("• F1-Skoru ve Recall değerleri büyük oldukça pozitif sınıfın doğru tespit edilme başarısı artmaktadır.")
+    print("• Brier Score değeri 0'a yaklaştıkça modelin olasılık tahminlerinin kalitesi artmaktadır.")
 
     return rapor_tablosu
 

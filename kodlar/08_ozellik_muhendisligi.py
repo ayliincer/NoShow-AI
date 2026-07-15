@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 
 
-def ham_veri_setini_yukle(dosya_yolu: str) -> pd.DataFrame:
+def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
     """
     Belirtilen dizindeki CSV dosyasını, üzerinde hiçbir dönüştürme 
     veya filtreleme işlemi yapmadan ham haliyle yükler.
@@ -40,6 +40,8 @@ def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
 
     # Mevcut olan sütunlar üzerinden veri alt kümesi oluşturulur
     mevcut_sutunlar = [sutun for sutun in surekli_degiskenler if sutun in veri.columns]
+    print(f"Analize Dahil Edilen Sürekli Değişken Sayısı : {len(mevcut_sutunlar)}")
+    print()
     
     if not mevcut_sutunlar:
         print("Analiz için uygun sürekli sayısal değişken bulunamadı.")
@@ -80,8 +82,23 @@ def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
                 "Mutlak Değer": katsayi
             })
             
+            
     ciftler_tablosu = pd.DataFrame(ayrik_ciftler)
+
+    guclu_korelasyon_sayisi = (
+        ciftler_tablosu["Mutlak Değer"] >= 0.70
+    ).sum()
+
+    print(f"Güçlü Korelasyon Çifti Sayısı (|r| ≥ 0.70): {guclu_korelasyon_sayisi}")
+    print()
+
     print(ciftler_tablosu.to_string(index=False))
+
+    print("\nNot:")
+    print("Bu analiz yalnızca yüksek doğrusal ilişkiye sahip değişken çiftlerini belirlemek amacıyla gerçekleştirilmiştir.")
+    print("Bu aşamada herhangi bir değişken veri setinden çıkarılmamıştır.")
+    print("Değişken çıkarma kararı modelleme aşamasındaki performans değerlendirmelerine göre verilecektir.")
+
     print("=" * 90)
 
 

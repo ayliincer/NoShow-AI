@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def veri_setini_yukle(dosya_yolu: str) -> pd.DataFrame:
+def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
     """
     Veri setini hiçbir ön işleme veya dönüşüm uygulamadan
     ham haliyle yükler.
@@ -25,6 +25,9 @@ def eksik_veri_durum_tespiti(veri: pd.DataFrame):
     print("=" * 90)
     print("ANALİZ: HAM VERİ EKSİK VERİ (MISSING VALUE) ANALİZİ")
     print("=" * 90)
+    print(f"Toplam Gözlem Sayısı : {len(veri):,}")
+    print(f"Toplam Değişken Sayısı : {veri.shape[1]}")
+    print()
 
     # Toplam satır sayısı üzerinden oran hesabı için referans alınır
     toplam_satir = len(veri)
@@ -43,10 +46,13 @@ def eksik_veri_durum_tespiti(veri: pd.DataFrame):
     sirali_tablo = eksik_veri_tablosu.sort_values(
         by="Eksik Değer Sayısı", ascending=False
     )
+    eksik_sutun_sayisi = (eksik_sayisi > 0).sum()
 
     # Raporlama formatında ekrana basılır
     print(sirali_tablo.to_string())
     print("=" * 90)
+    print(f"Eksik Değere Sahip Değişken Sayısı : {eksik_sutun_sayisi}")
+    print()
 
 
 def main():

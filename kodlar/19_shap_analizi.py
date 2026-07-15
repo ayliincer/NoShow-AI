@@ -133,6 +133,7 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
     model = dinamik_model_olustur(en_iyi_model_adi, y_tren)
     print(f"Nihai model ({en_iyi_model_adi}) eğitim kümesinde eğitiliyor...")
     model.fit(X_tren_kullanilan, y_tren)
+    print(">> Model eğitimi tamamlandı.")
 
     # 3. Temsili test örneklemi seçimi (ölçeklendirilmiş/ölçeklendirilmemiş, modele uygun veriden)
     ornek_boyutu = min(500, len(X_test_kullanilan))
@@ -146,14 +147,42 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
         # Arka plan verisi olarak tüm eğitim setini vermek yerine (yavaş olabilir),
         # temsili bir örneklem kullanılır.
         arka_plan_boyutu = min(200, len(X_tren_kullanilan))
-        X_tren_arka_plan = X_tren_kullanilan.sample(n=arka_plan_boyutu, random_state=42)
-        aciklayici = shap.LinearExplainer(model, X_tren_arka_plan)
+        X_tren_arka_plan = X_tren_kullanilan.sample(
+            n=arka_plan_boyutu,
+            random_state=42
+        )
+
+        print(">> LinearExplainer oluşturuluyor...")
+
+        aciklayici = shap.LinearExplainer(
+            model,
+            X_tren_arka_plan
+        )
+
+        print(">> LinearExplainer hazır.")
+        print(">> SHAP değerleri hesaplanıyor...")
+
         shap_degerleri = aciklayici(X_test_ornek)
+
+        print(">> SHAP değerleri hesaplandı.")
+
     else:
         # Ağaç modelleri için TreeExplainer
+
+        print(">> TreeExplainer oluşturuluyor...")
+
         aciklayici = shap.TreeExplainer(model)
+
+        print(">> TreeExplainer hazır.")
+        print(">> SHAP değerleri hesaplanıyor...")
+
         # check_additivity=False ile olası olasılıksal toplam uyuşmazlığı hataları engellenir
-        shap_degerleri = aciklayici(X_test_ornek, check_additivity=False)
+        shap_degerleri = aciklayici(
+            X_test_ornek,
+            check_additivity=False
+        )
+
+    print(">> SHAP değerleri hesaplandı.")
 
     # 5. Sınıflandırma çıktısı kontrolü
     # Eğer ikili sınıf olasılık çıktıları (probability) varsa, pozitif sınıfa (gelmeme kararı) odaklanılır
@@ -173,14 +202,28 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
     grafik_yolu = gorsel_klasor / "shap_summary_plot.png"
     plt.savefig(grafik_yolu, dpi=300, bbox_inches="tight")
     plt.close()
+    plt.figure(figsize=(10, 7))
+    shap.plots.bar(shap_degerleri_gorsel, max_display=15, show=False)
+    plt.title(
+        f"Öznitelik Önem Sıralaması: {en_iyi_model_adi} (SHAP Bar Plot)",
+        fontsize=13,
+        fontweight="bold",
+        pad=15
+    )
+    plt.tight_layout()
+
+    bar_grafik_yolu = gorsel_klasor / "shap_bar_plot.png"
+    plt.savefig(bar_grafik_yolu, dpi=300, bbox_inches="tight")
+    plt.close()
 
     print("\n" + "-" * 90)
     print("DİNAMİK SHAP ANALİZİ TAMAMLANDI")
     print("-" * 90)
     print(f"-> Analiz Edilen Şampiyon Model     : {en_iyi_model_adi}")
-    print(f"-> Kullanılan Örneklem Boyutu       : {ornek_boyutu} gözlem")
-    print(f"-> Üretilen ve Kaydedilen Grafik    : {grafik_yolu.name}")
-    print(f"-> Grafik Konumu                     : {grafik_yolu}")
+    print(f"-> SHAP Analizinde Kullanılan Örneklem : {ornek_boyutu} test gözlemi")
+    print(f"-> SHAP Beeswarm Grafiği : {grafik_yolu}")
+    print(f"-> SHAP Bar Grafiği      : {bar_grafik_yolu}")
+    print(f"-> Grafik Klasörü        : {gorsel_klasor}")
     print("=" * 110)
 
 

@@ -84,6 +84,8 @@ def kategorik_kodlama_uygula(egitim: pd.DataFrame, test: pd.DataFrame, profil_li
 
     # 2. Kodlama Adaylarının Belirlenmesi
     one_hot_sutunlari = [o["Sütun Adı"] for o in profil_listesi if o["Encoding Adayı"] == "EVET" and o["Sütun Adı"] in egitim.columns]
+    print(f"\nOne-Hot Encoding uygulanan sütun sayısı : {len(one_hot_sutunlari)}")
+    print(f"One-Hot Encoding uygulanan sütunlar : {one_hot_sutunlari}")
     yuksek_kardinalite_sutunlari = [o["Sütun Adı"] for o in profil_listesi if o["Encoding Adayı"] != "EVET" and o["Sütun Adı"] in egitim.columns]
 
     if yuksek_kardinalite_sutunlari:
@@ -134,8 +136,11 @@ def kategorik_kodlama_uygula(egitim: pd.DataFrame, test: pd.DataFrame, profil_li
     print(f"Test Seti Son Boyut   : {test_nihai.shape[0]:,} satır | {test_nihai.shape[1]} sütun")
     
     # Sütun yapılarının tam eşitliği mantıksal olarak tescil edilir
+# Sütun yapılarının tam eşitliği mantıksal olarak tescil edilir
     sutun_uyumu = list(egitim_nihai.columns) == list(test_nihai.columns)
+
     print(f"Eğitim ve Test Sütun Yapıları Birebir Eşit mi? : {sutun_uyumu}")
+    print(f"Oluşturulan Dummy Sütun Sayısı : {len(yeni_sutun_isimleri)}")
     print("=" * 90)
 
     return egitim_nihai, test_nihai

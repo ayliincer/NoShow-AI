@@ -81,6 +81,11 @@ def alt_kumeleri_kaydet(egitim_veri: pd.DataFrame, test_veri: pd.DataFrame, egit
     print(f"  Eğitim Seti: {egitim_yolu.name}")
     print(f"  Test Seti  : {test_yolu.name}")
 
+    print("\nNot:")
+    print("Tabakalı örnekleme (Stratified Sampling) kullanılarak hedef değişken dağılımı korunmuştur.")
+    print("Bu aşamada herhangi bir ölçekleme, kodlama veya SMOTE işlemi uygulanmamıştır.")
+    print("Bu işlemler yalnızca eğitim seti üzerinde sonraki adımlarda gerçekleştirilecektir.")
+
 
 def main():
     """

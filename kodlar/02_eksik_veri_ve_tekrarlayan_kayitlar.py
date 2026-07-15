@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def veri_setini_yukle(dosya_yolu: str) -> pd.DataFrame:
+def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
     """
     Veri setini hiçbir ön işleme veya dönüşüm uygulamadan
     ham haliyle yükler.
@@ -22,6 +22,8 @@ def hedef_degisken_dagilimi(veri: pd.DataFrame):
     print("=" * 90)
     print("ANALİZ: HEDEF DEĞİŞKEN (no_show) DAĞILIMI")
     print("=" * 90)
+    print(f"Toplam Gözlem Sayısı : {len(veri):,}")
+    print()
 
     frekans = veri["no_show"].value_counts(dropna=False)
     yuzde = veri["no_show"].value_counts(normalize=True, dropna=False) * 100
@@ -55,6 +57,7 @@ def kategorik_degisken_dagilimlari(veri: pd.DataFrame):
     for sutun in kategorik_sutunlar:
         if sutun in veri.columns:
             print(f"\n[Değişken: {sutun}]")
+            print(f"Benzersiz Sınıf Sayısı : {veri[sutun].nunique(dropna=False)}")
             print("-" * 45)
 
             frekans = veri[sutun].value_counts(dropna=False)

@@ -142,6 +142,7 @@ def veriyi_kaydet(veri: pd.DataFrame, dosya_yolu: Path):
 
     kayit_kopya.to_csv(dosya_yolu, index=False, encoding="utf-8-sig")
     print(f"Özellik mühendisliği tamamlanan veri seti başarıyla kaydedildi: {dosya_yolu.name}")
+    
 
 
 def main():
@@ -167,6 +168,9 @@ def main():
     # Güncellenmiş veri setlerini kaydetme
     veriyi_kaydet(egitim_yeni, egitim_yolu)
     veriyi_kaydet(test_yeni, test_yolu)
+    print("\nNot:")
+    print("Yeni özellikler yalnızca randevu oluşturma anında erişilebilir bilgiler kullanılarak üretilmiştir.")
+    print("Hedef değişken (no_show) veya geleceğe ait bilgilerden hiçbir türetilmiş özellik oluşturulmamıştır.")
 
 
 if __name__ == "__main__":

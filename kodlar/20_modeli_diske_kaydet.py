@@ -132,17 +132,21 @@ def nihai_bor_hatti_egit_ve_kaydet(egitim_veri: pd.DataFrame, en_iyi_model_adi: 
     # Canlı sistemde (API veya Arayüz) yeni bir hasta geldiğinde, bu bileşenler sırayla çalışacaktır.
     # "scaler" None ise, inference kodu ölçeklendirme adımını atlamalıdır.
     canli_sistem_paketi = {
-        "model_adi": en_iyi_model_adi,
-        "icd_frekans_haritasi": frekans_haritasi,
-        "scaler": olcekleyici,
-        "surekli_sutunlar": mevcut_surekliler if olcekleyici is not None else [],
-        "model": nihai_model,
-        "sutun_siralamasi": list(X_tren.columns)  # Yeni gelen verinin sütun sırasını eşitlemek için
+    "surum": "v1.0",
+    "model_adi": en_iyi_model_adi,
+    "icd_frekans_haritasi": frekans_haritasi,
+    "scaler": olcekleyici,
+    "surekli_sutunlar": mevcut_surekliler if olcekleyici is not None else [],
+    "feature_count": len(X_tren.columns),
+    "model": nihai_model,
+    "sutun_siralamasi": list(X_tren.columns)
     }
 
     # Dosya kaydı
     model_kayit_yolu.parent.mkdir(parents=True, exist_ok=True)
+    print("-> Model paketi oluşturuluyor...")
     joblib.dump(canli_sistem_paketi, model_kayit_yolu)
+    print("-> Model paketi başarıyla diske yazıldı.")
 
     print("\n" + "-" * 90)
     print("TESCİL İŞLEMİ BAŞARIYLA TAMAMLANDI")
@@ -151,7 +155,7 @@ def nihai_bor_hatti_egit_ve_kaydet(egitim_veri: pd.DataFrame, en_iyi_model_adi: 
     print(f"-> Kaydedilen Dosya     : {model_kayit_yolu.name}")
     print(f"-> Kayıt Konumu         : {model_kayit_yolu}")
     print(f"-> Scaler Durumu        : {'Aktif (StandardScaler kaydedildi)' if olcekleyici is not None else 'Kullanılmadı (None)'}")
-    print(f"-> Paket İçeriği        : [Model Adı, Model, Scaler, ICD Frekans Haritası, Sütun Sıralaması]")
+    print("-> Paket İçeriği        : [Sürüm, Model Adı, Model, Scaler, Sürekli Sütunlar, ICD Frekans Haritası, Sütun Sıralaması]")
     print("=" * 110)
 
 
