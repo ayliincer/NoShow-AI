@@ -66,7 +66,7 @@ Generated explanations include
 ## Project Structure
 
 ```
-NoShow-AI-main
+NoShow-AI
 │
 ├── kodlar/
 ├── veriler/
@@ -128,9 +128,10 @@ The project produces
 
 ## Author
 
-Uğur Bilge
+Aylin Cer
+Beyza Nur Dinçer
 
-Artificial Intelligence Operator
+Management Information Systems (MIS)
 
 Karadeniz Technical University
 
