@@ -3,10 +3,6 @@ from pathlib import Path
 
 
 def ararapor_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Bir önceki adımdan (Adım 10) elde edilen ve kaydedilen ara veri setini, 
-    üzerinde hiçbir ek manipülasyon yapmadan sisteme yükler.
-    """
     try:
         veri = pd.read_csv(dosya_yolu)
         return veri
@@ -16,13 +12,6 @@ def ararapor_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def zaman_tiplerini_donustur_ve_dogrula(veri: pd.DataFrame) -> pd.DataFrame:
-    """
-    ANALİZ VE ÖN İŞLEME ADIMI
-
-    Metinsel (string) tipteki tarih sütunlarını datetime formatına dönüştürür.
-    Hatalı/eksik yazılmış tarih formatlarını NaT (eksik veri) biçimine zorlar (coerce)
-    ve bu durumdaki gözlem sayılarını ampirik olarak raporlar. Satır silme yapmaz.
-    """
     print("=" * 90)
     print("İŞLEM: METİNSEL TAKVİMSEL DEĞİŞKENLERİN VERİ TİPİ DÖNÜŞÜMÜ VE DOĞRULANMASI")
     print("=" * 90)
@@ -40,14 +29,8 @@ def zaman_tiplerini_donustur_ve_dogrula(veri: pd.DataFrame) -> pd.DataFrame:
     print("-" * 45)
     for sutun in hedef_zaman_sutunlari:
         if sutun in veri.columns:
-            # Dönüşüm öncesi serideki orijinal eksik veri sayısı
             eski_eksik = veri[sutun].isnull().sum()
-            
-            # errors="coerce" ile formata uymayan gürültülü metinler NaT biçimine dönüştürülür.
-            # Böylece kod durmaz ve veri kaybı (satır silme) yaşanmaz.
             veri[sutun] = pd.to_datetime(veri[sutun], format="%d/%m/%Y", errors="coerce")
-            
-            # Dönüşüm sonrası oluşan yeni eksik veri sayısı
             yeni_eksik = veri[sutun].isnull().sum()
             format_hatali_sayisi = yeni_eksik - eski_eksik
             
@@ -61,7 +44,6 @@ def zaman_tiplerini_donustur_ve_dogrula(veri: pd.DataFrame) -> pd.DataFrame:
             print(f"Değişken: {sutun:<20} | Yeni Tip: {veri[sutun].dtype}")
     print("-" * 45)
 
-    # Kronolojik tutarlılık kontrolü ampirik olarak ekrana basılır (Eksik/NaT veriler hesaplamaya katılmaz)
     if "appointment_date" in veri.columns and "entry_service_date" in veri.columns:
         gecersiz_kronoloji_sayisi = (
             veri["appointment_date"] < veri["entry_service_date"]
@@ -80,19 +62,12 @@ def zaman_tiplerini_donustur_ve_dogrula(veri: pd.DataFrame) -> pd.DataFrame:
 
 
 def temiz_veriyi_kaydet(veri: pd.DataFrame, dosya_yolu: Path):
-    """
-    Dönüşümleri tamamlanmış ara veri setini bir sonraki bağımsız adıma 
-    (12_veri_seti_bolme.py) aktarmak üzere diske kaydeder.
-    """
     veri.to_csv(dosya_yolu, index=False, encoding="utf-8-sig")
     print(f"\nZaman dönüşümleri tescil edilen veri seti başarıyla kaydedildi.")
     print(f"Hedef Dosya: {dosya_yolu}")
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
     girdi_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"

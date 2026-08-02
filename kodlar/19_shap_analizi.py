@@ -15,10 +15,6 @@ from sklearn.preprocessing import StandardScaler
 
 
 def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
-    """
-    16. ve 17. adımlarda tamamen uyumlu ve temiz hale getirilmiş olan
-    eğitim ve test veri setlerini yükler.
-    """
     try:
         egitim = pd.read_csv(egitim_yolu)
         test = pd.read_csv(test_yolu)
@@ -29,10 +25,6 @@ def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
 
 
 def kalan_kategorik_ve_frekans_isleme(egitim: pd.DataFrame, test: pd.DataFrame) -> tuple:
-    """
-    18. adımdaki veri işleme yapısını (icd frekans kodlaması ve zaman atımı)
-    birebir ve sızıntısız şekilde gerçekleştirir.
-    """
     ham_zaman_sutunu = "appointment_time"
     for veri_kumesi in (egitim, test):
         if ham_zaman_sutunu in veri_kumesi.columns:
@@ -52,10 +44,6 @@ def kalan_kategorik_ve_frekans_isleme(egitim: pd.DataFrame, test: pd.DataFrame) 
 
 
 def en_iyi_modeli_tespit_et(sonuc_yolu: Path) -> str:
-    """
-    18. adımdan üretilen CSV dosyasını okuyarak 'Dış Test ROC-AUC' sütununa
-    göre ampirik olarak en başarılı modeli dinamik olarak seçer.
-    """
     try:
         sonuclar = pd.read_csv(sonuc_yolu)
         en_iyi_satir = sonuclar.loc[sonuclar["Dış Test ROC-AUC"].idxmax()]
@@ -69,10 +57,6 @@ def en_iyi_modeli_tespit_et(sonuc_yolu: Path) -> str:
 
 
 def dinamik_model_olustur(model_adi: str, y_tren: pd.Series):
-    """
-    Seçilen şampiyon modele ait nesneyi, 18. adımdaki hiperparametreler
-    ve sınıf ağırlıklarıyla dinamik olarak kurar.
-    """
     sinif_sayilari = y_tren.value_counts()
     scale_pos_weight = sinif_sayilari[0] / sinif_sayilari[1]
 
@@ -88,14 +72,6 @@ def dinamik_model_olustur(model_adi: str, y_tren: pd.Series):
 
 
 def olceklendirmeyi_uygula(model_adi: str, X_tren: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
-    """
-    ÖLÇEKLENDİRME ADIMI (18. adımla tutarlılık için eklendi)
-
-    Yalnızca Lojistik Regresyon şampiyon model olarak seçildiğinde devreye girer.
-    StandardScaler, 18. adımdaki metodolojiyle birebir aynı şekilde SADECE
-    eğitim setinden fit edilir (sızıntısız); test setine yalnızca transform
-    uygulanır. Diğer (ağaç tabanlı) modeller için veri değişmeden döner.
-    """
     X_tren_kullanilan = X_tren.copy()
     X_test_kullanilan = X_test.copy()
 
@@ -114,38 +90,23 @@ def olceklendirmeyi_uygula(model_adi: str, X_tren: pd.DataFrame, X_test: pd.Data
 
 
 def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataFrame, y_test: pd.Series, en_iyi_model_adi: str, gorsel_klasor: Path):
-    """
-    MODEL AÇIKLANABİLİRLİK (XAI) ADIMI
-
-    En başarılı model üzerinde SHAP değerlerini dinamik olarak hesaplar.
-    Hataları önlemek adına 'check_additivity=False' parametresini kullanır.
-    18. adımla tam tutarlılık için, model Lojistik Regresyon ise veriler
-    önce ölçeklendirilir (bkz. olceklendirmeyi_uygula).
-    """
     print("=" * 110)
     print("İŞLEM: DİNAMİK AÇIKLANABİLİR YAPAY ZEKA (XAI) - SHAP ANALİZİ VE TESCİLİ")
     print("=" * 110)
 
-    # 1. 18. adımla tutarlı olacak şekilde gerekiyorsa ölçeklendirme uygulanır
     X_tren_kullanilan, X_test_kullanilan = olceklendirmeyi_uygula(en_iyi_model_adi, X_tren, X_test)
 
-    # 2. Şampiyon modeli dinamik kur ve (doğru ölçekteki veriyle) eğit
     model = dinamik_model_olustur(en_iyi_model_adi, y_tren)
     print(f"Nihai model ({en_iyi_model_adi}) eğitim kümesinde eğitiliyor...")
     model.fit(X_tren_kullanilan, y_tren)
     print(">> Model eğitimi tamamlandı.")
 
-    # 3. Temsili test örneklemi seçimi (ölçeklendirilmiş/ölçeklendirilmemiş, modele uygun veriden)
     ornek_boyutu = min(500, len(X_test_kullanilan))
     X_test_ornek = X_test_kullanilan.sample(n=ornek_boyutu, random_state=42)
 
     print("SHAP Açıklayıcısı (Explainer) hazırlanıyor...")
 
-    # 4. Model türüne göre en uygun Explainer nesnesinin saptanması
-    # Lojistik Regresyon hariç tüm modellerimiz ağaç tabanlıdır.
     if en_iyi_model_adi == "Logistic Regression":
-        # Arka plan verisi olarak tüm eğitim setini vermek yerine (yavaş olabilir),
-        # temsili bir örneklem kullanılır.
         arka_plan_boyutu = min(200, len(X_tren_kullanilan))
         X_tren_arka_plan = X_tren_kullanilan.sample(
             n=arka_plan_boyutu,
@@ -167,8 +128,6 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
         print(">> SHAP değerleri hesaplandı.")
 
     else:
-        # Ağaç modelleri için TreeExplainer
-
         print(">> TreeExplainer oluşturuluyor...")
 
         aciklayici = shap.TreeExplainer(model)
@@ -176,7 +135,6 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
         print(">> TreeExplainer hazır.")
         print(">> SHAP değerleri hesaplanıyor...")
 
-        # check_additivity=False ile olası olasılıksal toplam uyuşmazlığı hataları engellenir
         shap_degerleri = aciklayici(
             X_test_ornek,
             check_additivity=False
@@ -184,36 +142,65 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
 
     print(">> SHAP değerleri hesaplandı.")
 
-    # 5. Sınıflandırma çıktısı kontrolü
-    # Eğer ikili sınıf olasılık çıktıları (probability) varsa, pozitif sınıfa (gelmeme kararı) odaklanılır
+
     if len(shap_degerleri.values.shape) == 3:
-        # shap_degerleri[:, :, 1] formatı yeni API'lerde geçerlidir
         shap_degerleri_gorsel = shap_degerleri[:, :, 1]
     else:
         shap_degerleri_gorsel = shap_degerleri
 
-    # 6. Grafik Üretimi ve Tescili
     plt.figure(figsize=(12, 8))
-    shap.plots.beeswarm(shap_degerleri_gorsel, max_display=15, show=False)
-    plt.title(f"Küresel Öznitelik Etkileri: {en_iyi_model_adi} (SHAP Beeswarm Plot)", fontsize=13, fontweight="bold", pad=15)
+
+    shap.plots.beeswarm(
+        shap_degerleri_gorsel,
+        max_display=20,
+        show=False
+    )
+
+    plt.title(
+        "SHAP Summary Plot (Random Forest)",
+        fontsize=14,
+        fontweight="bold",
+        pad=15
+    )
+
     plt.tight_layout()
 
     gorsel_klasor.mkdir(parents=True, exist_ok=True)
     grafik_yolu = gorsel_klasor / "shap_summary_plot.png"
-    plt.savefig(grafik_yolu, dpi=300, bbox_inches="tight")
+
+    plt.savefig(
+        grafik_yolu,
+        dpi=300,
+        bbox_inches="tight"
+    )
     plt.close()
-    plt.figure(figsize=(10, 7))
-    shap.plots.bar(shap_degerleri_gorsel, max_display=15, show=False)
+
+
+    plt.figure(figsize=(10, 9))
+
+    shap.plots.bar(
+        shap_degerleri_gorsel,
+        max_display=30,
+        show=False
+    )
+
     plt.title(
-        f"Öznitelik Önem Sıralaması: {en_iyi_model_adi} (SHAP Bar Plot)",
-        fontsize=13,
+        "Global Feature Importance (Random Forest - SHAP)",
+        fontsize=14,
         fontweight="bold",
         pad=15
     )
+
     plt.tight_layout()
 
     bar_grafik_yolu = gorsel_klasor / "shap_bar_plot.png"
-    plt.savefig(bar_grafik_yolu, dpi=300, bbox_inches="tight")
+
+    plt.savefig(
+        bar_grafik_yolu,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
     plt.close()
 
     print("\n" + "-" * 90)
@@ -221,16 +208,13 @@ def shap_analizi_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataF
     print("-" * 90)
     print(f"-> Analiz Edilen Şampiyon Model     : {en_iyi_model_adi}")
     print(f"-> SHAP Analizinde Kullanılan Örneklem : {ornek_boyutu} test gözlemi")
-    print(f"-> SHAP Beeswarm Grafiği : {grafik_yolu}")
-    print(f"-> SHAP Bar Grafiği      : {bar_grafik_yolu}")
+    print(f"-> SHAP Summary Plot     : {grafik_yolu}")
+    print(f"-> SHAP Feature Importance Plot : {bar_grafik_yolu}")
     print(f"-> Grafik Klasörü        : {gorsel_klasor}")
     print("=" * 110)
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
     egitim_yolu = Path(__file__).resolve().parent.parent / "veriler" / "medical_appointments_train.csv"
     test_yolu = Path(__file__).resolve().parent.parent / "veriler" / "medical_appointments_test.csv"
     sonuc_yolu = Path(__file__).resolve().parent.parent / "veriler" / "nihai_dis_dogrulama_sonuclari.csv"
@@ -242,10 +226,8 @@ def main():
     if egitim_veri is None or test_veri is None:
         return
 
-    # Kalan kategorik ve icd dönüşümlerini sızıntısız uygula
     egitim_veri, test_veri = kalan_kategorik_ve_frekans_isleme(egitim_veri, test_veri)
 
-    # Hedef Değişken Haritalama
     kodlama_semasi = {"no": 0, "yes": 1}
     y_train = egitim_veri["no_show"].map(kodlama_semasi)
     y_test = test_veri["no_show"].map(kodlama_semasi)
@@ -253,10 +235,9 @@ def main():
     X_train = egitim_veri.drop(columns=["no_show"])
     X_test = test_veri.drop(columns=["no_show"])
 
-    # 18. adımdan gelen en başarılı modeli tescil et
     en_iyi_model_adi = en_iyi_modeli_tespit_et(sonuc_yolu)
 
-    # SHAP Analizini Başlat
+
     shap_analizi_yurut(X_train, y_train, X_test, y_test, en_iyi_model_adi, gorsel_klasor)
 
 

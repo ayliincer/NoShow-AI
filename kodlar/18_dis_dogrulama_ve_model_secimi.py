@@ -15,9 +15,6 @@ from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, re
 
 
 def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
-    """
-    16. adımda kategorik kodlaması tamamlanmış eğitim ve test setlerini yükler.
-    """
     try:
         egitim = pd.read_csv(egitim_yolu)
         test = pd.read_csv(test_yolu)
@@ -28,12 +25,6 @@ def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
 
 
 def kalan_kategorik_ve_frekans_isleme(egitim: pd.DataFrame, test: pd.DataFrame) -> tuple:
-    """
-    ÖN İŞLEME VE DÖNÜŞÜM ADIMI
-
-    'appointment_time' değişkenini çıkarır ve 'icd' değişkenine sızıntısız 
-    Frequency Encoding uygular.
-    """
     ham_zaman_sutunu = "appointment_time"
     for veri_kumesi in (egitim, test):
         if ham_zaman_sutunu in veri_kumesi.columns:
@@ -55,16 +46,10 @@ def kalan_kategorik_ve_frekans_isleme(egitim: pd.DataFrame, test: pd.DataFrame) 
 
 
 def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.DataFrame, y_test: pd.Series) -> pd.DataFrame:
-    """
-    MODELLEME VE DIŞ DOĞRULAMA ADIMI
-
-    Modelleri eğitir ve tamamen izole edilmiş dış test seti üzerinde ampirik olarak test eder.
-    """
     print("=" * 110)
     print("İŞLEM: SAKLI DIŞ TEST SETİ (EXTERNAL TEST SET) ÜZERİNDE NİHAİ DIŞ DOĞRULAMA")
     print("=" * 110)
 
-    # Lojistik regresyon için StandardScaler parametreleri sadece eğitim setinden öğrenilir
     surekli_sutunlar = ["age", "average_temp_day", "average_rain_day", "max_temp_day", "max_rain_day"]
     mevcut_surekliler = [s for s in surekli_sutunlar if s in X_tren.columns]
 
@@ -76,7 +61,6 @@ def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.Data
         X_tren_olcekli[mevcut_surekliler] = olcekleyici.fit_transform(X_tren[mevcut_surekliler])
         X_test_olcekli[mevcut_surekliler] = olcekleyici.transform(X_test[mevcut_surekliler])
 
-    # Sınıf dengesizliği ağırlığı (XGBoost için)
     sinif_sayilari = y_tren.value_counts()
     scale_pos_weight = sinif_sayilari[0] / sinif_sayilari[1]
 
@@ -175,7 +159,6 @@ def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.Data
     print(rapor_tablosu.to_string(index=False))
     print("=" * 110)
 
-    # En başarılı modeli otomatik raporla
     en_iyi = rapor_tablosu.iloc[0]
 
     print("\n" + "-" * 110)
@@ -195,9 +178,6 @@ def dis_dogrulama_yurut(X_tren: pd.DataFrame, y_tren: pd.Series, X_test: pd.Data
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
     egitim_yolu = Path(__file__).resolve().parent.parent / "veriler" / "medical_appointments_train.csv"
     test_yolu = Path(__file__).resolve().parent.parent / "veriler" / "medical_appointments_test.csv"
 
@@ -206,27 +186,22 @@ def main():
     if egitim_veri is None or test_veri is None:
         return
 
-    # Sütun yapısı güvenliği için kontrol (Kategorik verilerin sızmaması ve hata vermemesi için)
     nesne_sutunlari = egitim_veri.select_dtypes(include=["object"]).columns
     print(f"Bilgi: Eğitim setindeki ham kategorik sütunlar: {list(nesne_sutunlari)}")
 
-    # Kalan kategorik ve icd dönüşümlerini uygula
     egitim_veri, test_veri = kalan_kategorik_ve_frekans_isleme(egitim_veri, test_veri)
 
-    # Hedef Değişken Haritalama ve Sıkı NaN Denetimi (y_test güvenliği için)
     kodlama_semasi = {"no": 0, "yes": 1}
     
     y_train = egitim_veri["no_show"].map(kodlama_semasi)
     y_test = test_veri["no_show"].map(kodlama_semasi)
 
-    # Güvenlik Koruması (Assertion)
     assert y_train.isna().sum() == 0, "Hata: y_train içinde haritalanamayan NaN değerler mevcut!"
     assert y_test.isna().sum() == 0, "Hata: y_test içinde haritalanamayan NaN değerler mevcut!"
 
     X_train = egitim_veri.drop(columns=["no_show"])
     X_test = test_veri.drop(columns=["no_show"])
 
-    # Dış Doğrulamayı Başlat
     sonuc_tablosu = dis_dogrulama_yurut(X_train, y_train, X_test, y_test)
 
     kayit_yolu = Path(__file__).resolve().parent.parent / "veriler" / "nihai_dis_dogrulama_sonuclari.csv"

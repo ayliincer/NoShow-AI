@@ -3,10 +3,6 @@ from pathlib import Path
 
 
 def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Veri setini hiçbir ön işleme veya dönüşüm uygulamadan
-    ham haliyle yükler.
-    """
     try:
         veri = pd.read_csv(dosya_yolu)
         return veri
@@ -16,9 +12,6 @@ def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def hedef_degisken_dagilimi(veri: pd.DataFrame):
-    """
-    Hedef değişkenin (no_show) ham frekans ve yüzde dağılımını raporlar.
-    """
     print("=" * 90)
     print("ANALİZ: HEDEF DEĞİŞKEN (no_show) DAĞILIMI")
     print("=" * 90)
@@ -35,16 +28,10 @@ def hedef_degisken_dagilimi(veri: pd.DataFrame):
 
 
 def kategorik_degisken_dagilimlari(veri: pd.DataFrame):
-    """
-    Veri setindeki ana kategorik değişkenlerin benzersiz sınıf listelerini
-    	ve frekans yoğunluklarını ampirik olarak raporlar.
-    """
     print("\n")
     print("=" * 90)
     print("ANALİZ: KATEGORİK VE SÖZEL DEĞİŞKENLERİN DAĞILIMI")
     print("=" * 90)
-
-    # Analiz edilecek ana kategorik sütunlar listesi
     kategorik_sutunlar = [
         "specialty",
         "gender",
@@ -75,10 +62,6 @@ def kategorik_degisken_dagilimlari(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası ve akış yönetimi.
-    """
-    # Proje dizin yapısına uygun dinamik yol tanımı
     veri_dosyasi = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -90,7 +73,6 @@ def main():
     if veri is None:
         return
 
-    # Sınıf dengesi ve frekans analizlerini çalıştırma
     hedef_degisken_dagilimi(veri)
     kategorik_degisken_dagilimlari(veri)
 

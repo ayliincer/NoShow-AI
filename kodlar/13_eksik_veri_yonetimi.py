@@ -3,10 +3,6 @@ from pathlib import Path
 
 
 def egitim_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Bir önceki adımdan (Adım 12) elde edilen ve tabakalı olarak ayrılan 
-    eğitim veri setini, üzerinde hiçbir değişiklik yapmadan sisteme yükler.
-    """
     try:
         veri = pd.read_csv(dosya_yolu)
         return veri
@@ -16,13 +12,6 @@ def egitim_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def eksik_veri_profilini_incele(veri: pd.DataFrame):
-    """
-    ANALİZ ADIMI
-
-    Yalnızca eğitim veri seti (medical_appointments_train.csv) üzerindeki 
-    eksik veri dağılımını, oranlarını ve veri tiplerini ampirik olarak hesaplar.
-    Olası metodolojik aday stratejileri tablolaştırarak raporlar.
-    """
     print("=" * 110)
     print("ANALİZ: İZOLE EDİLMİŞ EĞİTİM VERİ SETİ (medical_appointments_train.csv) EKSİK VERİ PROFİLLEMESİ")
     print("=" * 110)
@@ -31,13 +20,10 @@ def eksik_veri_profilini_incele(veri: pd.DataFrame):
     eksik_analiz_listesi = []
 
     for sutun in veri.columns:
-        # İlgili sütunun ham serisindeki eksik değer (NaN/NaT) sayısı hesaplanır
         eksik_sayisi = veri[sutun].isnull().sum()
         eksik_yuzdesi = (eksik_sayisi / toplam_satir) * 100
         veri_tipi = veri[sutun].dtype
 
-        # Metodolojik esneklik ilkesi gereği, peşin karar vermeden 
-        # veri tipine göre değerlendirilebilecek olası aday stratejiler listelenir
         if eksik_sayisi > 0:
             if pd.api.types.is_numeric_dtype(veri_tipi):
                 olasi_stratejiler = "Ortalama / Medyan / Model Tabanlı Doldurma Stratejileri Adaydır"
@@ -56,13 +42,9 @@ def eksik_veri_profilini_incele(veri: pd.DataFrame):
             "Değerlendirilebilecek Olası Stratejiler": olasi_stratejiler
         })
 
-    # Elde edilen ampirik sonuçlar DataFrame formatına dönüştürülür
     eksik_tablosu = pd.DataFrame(eksik_analiz_listesi)
-    
-    # Eksik değer sayısına göre büyükten küçüğe sıralanır
     sirali_eksik_tablosu = eksik_tablosu.sort_values(by="Eksik Değer Sayısı", ascending=False)
 
-    # SCI düzeyinde şeffaf hizalama ve raporlama ayarları
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', 1000)
@@ -76,10 +58,6 @@ def eksik_veri_profilini_incele(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
-    # Adım 12'den gelen eğitim veri setinin güncellenmiş dinamik yolu
     egitim_veri_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -91,7 +69,6 @@ def main():
     if egitim_verisi is None:
         return
 
-    # Sadece eğitim verisi üzerinde eksik veri profil incelemesinin çalıştırılması
     eksik_veri_profilini_incele(egitim_verisi)
 
 

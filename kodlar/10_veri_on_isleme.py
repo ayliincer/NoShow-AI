@@ -3,10 +3,6 @@ from pathlib import Path
 
 
 def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Belirtilen dizindeki ham CSV dosyasını yükler.
-    Veri üzerinde hiçbir değişiklik yapılmaz.
-    """
     try:
         return pd.read_csv(dosya_yolu)
     except Exception as hata:
@@ -18,10 +14,6 @@ def veri_sizintisi_degiskenini_cikar(
     veri: pd.DataFrame,
     hedef_sutun: str
 ) -> pd.DataFrame:
-    """
-    Veri sızıntısı riski taşıyan değişkeni veri setinden çıkarır.
-    """
-
     print("\n" + "=" * 90)
     print("İŞLEM 1 : VERİ SIZINTISI (DATA LEAKAGE) KONTROLÜ")
     print("=" * 90)
@@ -48,10 +40,6 @@ def tam_mukerrer_kayitlari_temizle(
     veri: pd.DataFrame,
     ham_duplicate_sayisi: int
 ) -> pd.DataFrame:
-    """
-    Tam mükerrer kayıtları temizler ve akademik rapor üretir.
-    """
-
     print("\n" + "=" * 90)
     print("İŞLEM 2 : TAM MÜKERRER (DUPLICATE) KAYIT TEMİZLİĞİ")
     print("=" * 90)
@@ -86,10 +74,6 @@ def tam_mukerrer_kayitlari_temizle(
 
 
 def nihai_veri_raporu(veri: pd.DataFrame):
-    """
-    Nihai veri yapısını raporlar.
-    """
-
     print("\n" + "=" * 90)
     print("NİHAİ VERİ YAPISI")
     print("=" * 90)
@@ -109,11 +93,6 @@ def temiz_veriyi_kaydet(
     veri: pd.DataFrame,
     dosya_yolu: Path
 ):
-    """
-    Temizlenmiş veri setini bir sonraki preprocessing
-    adımlarında kullanılmak üzere kaydeder.
-    """
-
     veri.to_csv(
         dosya_yolu,
         index=False,

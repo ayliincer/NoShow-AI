@@ -4,10 +4,6 @@ from pathlib import Path
 
 
 def ara_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Bir önceki adımdan (Adım 11) elde edilen ve kaydedilen ara veri setini, 
-    üzerinde hiçbir ek manipülasyon yapmadan sisteme yükler.
-    """
     try:
         veri = pd.read_csv(dosya_yolu)
         return veri
@@ -17,13 +13,6 @@ def ara_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def tabakali_veri_seti_bolme(veri: pd.DataFrame, hedef_kolon: str) -> tuple:
-    """
-    ANALİZ VE ÖN İŞLEME ADIMI
-
-    Veri setini, hedef değişkenin sınıfsal dağılım oranlarını koruyarak
-    Eğitim (Train) ve Test (Test) olarak %80 - %20 oranında böler.
-    Her iki kümedeki sınıf dağılımlarını ampirik olarak raporlar.
-    """
     print("=" * 90)
     print("İŞLEM: TABAKALI ÖRNEKLEME İLE VERİ SETİNİN EĞİTİM VE TEST OLARAK BÖLÜNMESİ")
     print("=" * 90)
@@ -32,28 +21,21 @@ def tabakali_veri_seti_bolme(veri: pd.DataFrame, hedef_kolon: str) -> tuple:
         print(f"Hata: Hedef değişken '{hedef_kolon}' veri setinde bulunamadı.")
         return None, None
 
-    # Toplam matris boyutları tescil edilir
     baslangic_satir, baslangic_sutun = veri.shape
     print(f"Girdi Veri Seti Boyutu: {baslangic_satir:,} satır, {baslangic_sutun} sütun")
     print("-" * 90)
 
-    # %80 Eğitim, %20 Test olacak şekilde tabakalı bölme nesnesi oluşturulur
-    # Yeniden üretilebilirlik (reproducibility) için random_state sabitlenir
     bolucu = StratifiedShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
 
-    # Bağımsız değişken matrisi (X) ve hedef değişken serisi (y) ayrımı yapmadan,
-    # satır indeksleri üzerinden tabakalı bölme gerçekleştirilir
     for egitim_indeks, test_indeks in bolucu.split(veri, veri[hedef_kolon]):
         egitim_seti = veri.iloc[egitim_indeks].reset_index(drop=True)
         test_seti = veri.iloc[test_indeks].reset_index(drop=True)
 
-    # Her iki kümenin ampirik boyut raporlaması
     print("[KÜME BOYUTLARI VE ORANLARI]")
     print(f"Eğitim Seti (Train Set) : {len(egitim_seti):,} satır | Oran: %{(len(egitim_seti)/baslangic_satir)*100:.2f}")
     print(f"Test Seti (Test Set)     : {len(test_seti):,} satır | Oran: %{(len(test_seti)/baslangic_satir)*100:.2f}")
     print("-" * 90)
 
-    # Sınıf dengesinin (Class Imbalance) korunduğunun ampirik tescili
     print("\n[HEDEF DEĞİŞKEN (no_show) SINIF DAĞILIM KONTROLÜ]")
     print("." * 45)
     
@@ -70,10 +52,6 @@ def tabakali_veri_seti_bolme(veri: pd.DataFrame, hedef_kolon: str) -> tuple:
 
 
 def alt_kumeleri_kaydet(egitim_veri: pd.DataFrame, test_veri: pd.DataFrame, egitim_yolu: Path, test_yolu: Path):
-    """
-    İzole edilen eğitim ve test kümelerini, sonraki bağımsız adımlarda 
-    kullanılmak üzere ayrı CSV dosyaları olarak kaydeder.
-    """
     egitim_veri.to_csv(egitim_yolu, index=False, encoding="utf-8-sig")
     test_veri.to_csv(test_yolu, index=False, encoding="utf-8-sig")
     
@@ -88,10 +66,6 @@ def alt_kumeleri_kaydet(egitim_veri: pd.DataFrame, test_veri: pd.DataFrame, egit
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
-    # Adım 11'den gelen girdi dosyasının yolu
     girdi_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -103,13 +77,11 @@ def main():
     if veri is None:
         return
 
-    # Tabakalı bölme işleminin çalıştırılması
     egitim_kumesi, test_kumesi = tabakali_veri_seti_bolme(veri, hedef_kolon="no_show")
 
     if egitim_kumesi is None or test_kumesi is None:
         return
 
-    # Çıktıların ayrı ayrı kaydedileceği yollar
     egitim_cikti_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"

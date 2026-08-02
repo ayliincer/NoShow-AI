@@ -1,0 +1,5 @@
+﻿Metrik,Statik (A) Ortalama,Hibrit (B) Ortalama,Fark (B-A),%95 Güven Aralığı,p-değeri (paired t-test),İstatistiksel Olarak Anlamlı mı (a=0.05),N (gün)
+Ort. Hasta Bekleme Süresi (dk),9.37,9.79,0.415,"(-0.194, +1.024)",0.18123,Hayır,2500
+Hekim Atıl Süresi (dk/gün),31.61,0.0,-31.614,"(-32.414, -30.814)",0.0,Evet,2500
+Hekim Mesai Aşımı (dk/gün),13.14,14.43,1.291,"(+0.079, +2.502)",0.036779,Evet,2500
+Görülen Hasta Sayısı (gün),17.89,18.53,0.639,"(+0.564, +0.715)",0.0,Evet,2500

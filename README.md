@@ -84,7 +84,7 @@ NoShow-AI
 ```bash
 git clone <repository>
 
-cd NoShow-AI-main
+cd NoShow-AI
 
 pip install -r requirements.txt
 ```

@@ -15,10 +15,6 @@ from imblearn.over_sampling import SMOTE
 
 
 def islenmis_veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
-    """
-    16. adımda kategorik kodlaması tamamlanan eğitim ve test veri setlerini
-    üzerinde hiçbir ek manipülasyon yapmadan diskten yükler.
-    """
     try:
         egitim = pd.read_csv(egitim_yolu)
         test = pd.read_csv(test_yolu)
@@ -29,19 +25,6 @@ def islenmis_veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
 
 
 def kalan_kategorik_degiskenleri_isle(egitim: pd.DataFrame, test: pd.DataFrame) -> tuple:
-    """
-    ÖN İŞLEME ADIMI
-
-    16. adımda One-Hot Encoding kapsamı dışında bırakılan iki değişkeni işler:
-      - 'appointment_time': Saat bilgisi zaten 'appointment_hour' ve
-        'appointment_shift' türetilmiş öznitelikleriyle temsil edildiği için
-        ham haliyle matristen çıkarılır.
-      - 'icd': Yüksek kardinalitesi (63 sınıf) nedeniyle One-Hot Encoding
-        kapsamı dışında bırakılmıştı; burada Frequency Encoding ile
-        sayısallaştırılır. Frekans haritası veri sızıntısını önlemek için
-        yalnızca eğitim setinden öğrenilir, test setine sadece uygulanır.
-        Test setinde görülmeyen kodlar 0 ile doldurulur.
-    """
     print("\n" + "=" * 90)
     print("İŞLEM: 16. ADIMDAN KALAN KATEGORİK DEĞİŞKENLERİN İŞLENMESİ")
     print("=" * 90)
@@ -78,13 +61,6 @@ def kalan_kategorik_degiskenleri_isle(egitim: pd.DataFrame, test: pd.DataFrame) 
 
 
 def hedef_ve_oznitelikleri_ayir(egitim: pd.DataFrame, test: pd.DataFrame, hedef_sutun: str) -> tuple:
-    """
-    ÖN İŞLEME ADIMI
-
-    Hedef değişken 'no_show'u {'no': 0, 'yes': 1} şeklinde ikili koda
-    dönüştürür ve bağımsız değişken matrisi (X) ile hedef değişken serisini
-    (y) hem eğitim hem de test setleri için ayırır.
-    """
     print("\n" + "=" * 90)
     print("İŞLEM: HEDEF DEĞİŞKENİN İKİLİ KODLANMASI VE X / y AYRIMI")
     print("=" * 90)
@@ -112,17 +88,6 @@ def hedef_ve_oznitelikleri_ayir(egitim: pd.DataFrame, test: pd.DataFrame, hedef_
 
 
 def model_pipeline_lerini_olustur(y_train: pd.Series) -> dict:
-    """
-    MODELLEME ADIMI
-
-    Karşılaştırılacak altı sınıflandırıcı için ayrı Pipeline nesneleri kurar.
-    SMOTE, imblearn.Pipeline sayesinde yalnızca çapraz doğrulamanın eğitim
-    katlarında (fold) aktif olur; doğrulama katlarına sızmaz. Doğrusal model
-    (Logistic Regression) için StandardScaler eklenir; ağaç tabanlı modeller
-    ölçeklendirme gerektirmediği için bu adım atlanır. Ağaç tabanlı modellerde
-    dengesizlik SMOTE yerine sınıf ağırlıklandırma mekanizmalarıyla da ayrıca
-    ele alınır, böylece iki strateji birlikte karşılaştırılabilir.
-    """
     print("\n" + "=" * 90)
     print("İŞLEM: MODEL PIPELINE'LARININ KURULMASI")
     print("=" * 90)
@@ -189,18 +154,6 @@ def model_pipeline_lerini_olustur(y_train: pd.Series) -> dict:
 
 
 def capraz_dogrulama_calistir(pipelines: dict, X_train: pd.DataFrame, y_train: pd.Series) -> pd.DataFrame:
-    """
-    ANALİZ ADIMI
-
-    5 katlı, sınıf oranlarını koruyan (StratifiedKFold) çapraz doğrulama ile
-    her modeli roc_auc, average_precision, f1 ve neg_brier_score metriklerine
-    göre değerlendirir. SMOTE yalnızca eğitim katlarına uygulandığından
-    skorlar dengesizlik enjeksiyonundan kaynaklanan sızıntı riski taşımaz.
-
-    Not: sklearn'de doğrudan 'brier_score_loss' adında bir scorer string'i
-    yoktur; bu skor 'neg_brier_score' anahtarıyla negatif işaretli olarak
-    döner ve raporlama sırasında işareti burada geri çevrilir.
-    """
     print("\n" + "=" * 90)
     print("İŞLEM: 5 KATLI TABAKALI ÇAPRAZ DOĞRULAMA")
     print("=" * 90)
@@ -269,19 +222,12 @@ def capraz_dogrulama_calistir(pipelines: dict, X_train: pd.DataFrame, y_train: p
 
 
 def sonuclari_diske_kaydet(sonuc_tablosu: pd.DataFrame, kayit_yolu: Path):
-    """
-    Çapraz doğrulama sonuç tablosunu, bir sonraki adımda (dış doğrulama /
-    model seçimi) kullanılmak üzere diske kaydeder.
-    """
     sonuc_tablosu.to_csv(kayit_yolu, index=False, encoding="utf-8-sig")
     print("\nÇapraz doğrulama sonuçları başarıyla kaydedildi.")
     print(f"Dosya : {kayit_yolu}")
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
     egitim_yolu = Path(__file__).resolve().parent.parent / "veriler" / "medical_appointments_train.csv"
     test_yolu = Path(__file__).resolve().parent.parent / "veriler" / "medical_appointments_test.csv"
 
@@ -292,9 +238,6 @@ def main():
 
     egitim_veri, test_veri = kalan_kategorik_degiskenleri_isle(egitim_veri, test_veri)
 
-    # X_test / y_test burada hazırlanır ama bilinçli olarak çapraz doğrulamada
-    # KULLANILMAZ; 12_dis_dogrulama.py'deki yaklaşımla tutarlı biçimde yalnızca
-    # bu adımda seçilen en iyi model üzerinde ileride dış doğrulama için saklanır.
     X_train, X_test, y_train, y_test = hedef_ve_oznitelikleri_ayir(egitim_veri, test_veri, "no_show")
 
     pipelines = model_pipeline_lerini_olustur(y_train)

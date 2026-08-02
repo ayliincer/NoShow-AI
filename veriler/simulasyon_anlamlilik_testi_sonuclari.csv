@@ -1,0 +1,5 @@
+﻿Metrik,Statik Ort.,Hibrit Ort.,İyileşme (%),Paired t-test p,Wilcoxon p,Anlamlı mı (p<0.05)
+Ort. Hasta Bekleme Süresi (dk),10.39,11.66,-12.19,1.17e-14,8.81e-21,EVET
+Hekim Atıl Süresi (dk/gün),31.15,0.0,100.0,1.24e-84,1.71e-46,EVET
+Hekim Mesai Aşımı (dk/gün),13.98,16.46,-17.71,8.90e-06,4.30e-05,EVET
+Görülen Hasta Sayısı (gün),17.92,18.6,3.76,4.07e-38,2.01e-28,EVET

@@ -1,0 +1,11 @@
+﻿ozellik,mean_abs_shap_N2000
+appointment_year,0.03342
+lead_time,0.01458
+average_temp_day,0.01068
+temp_range,0.00846
+max_temp_day,0.00796
+age,0.00681
+appointment_hour,0.00657
+appointment_month_june,0.00629
+appointment_day_of_week,0.00473
+icd_frekans,0.00412

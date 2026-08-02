@@ -1,0 +1,5 @@
+﻿Metrik,Statik (A),Koşullu (C),Fark (C-A),%95 GA,p-değeri,Anlamlı mı (a=0.05)
+Ort. Hasta Bekleme Süresi (dk),9.37,9.89,0.518,"(-0.103, +1.140)",0.102051,Hayır
+Hekim Atıl Süresi (dk/gün),31.61,0.0,-31.614,"(-32.414, -30.814)",0.0,Evet
+Hekim Mesai Aşımı (dk/gün),13.14,12.78,-0.355,"(-1.541, +0.831)",0.557291,Hayır
+Görülen Hasta Sayısı (gün),17.89,18.23,0.334,"(+0.262, +0.407)",0.0,Evet

@@ -3,21 +3,6 @@ from pathlib import Path
 
 
 def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Veri setini hiçbir ön işleme, dönüşüm veya veri manipülasyonu
-    uygulamadan ham haliyle yükler.
-
-    Parametre
-    ---------
-    dosya_yolu : str
-        CSV dosyasının yolu.
-
-    Döndürür
-    --------
-    pandas.DataFrame
-        Ham veri seti.
-    """
-
     try:
         veri = pd.read_csv(dosya_yolu)
         return veri
@@ -28,12 +13,6 @@ def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def veri_seti_genel_bakis(veri: pd.DataFrame):
-    """
-    ADIM 1
-
-    Veri setinin genel yapısını raporlar.
-    """
-
     print("=" * 90)
     print("ADIM 1 - VERİ SETİ GENEL BAKIŞI")
     print("=" * 90)
@@ -66,12 +45,6 @@ def veri_seti_genel_bakis(veri: pd.DataFrame):
 
 
 def degisken_yapisini_incele(veri: pd.DataFrame):
-    """
-    ADIM 2
-
-    Veri setinin yapısal şemasını raporlar.
-    """
-
     print("\n")
     print("=" * 90)
     print("ADIM 2 - DEĞİŞKEN YAPISI")
@@ -94,12 +67,6 @@ def degisken_yapisini_incele(veri: pd.DataFrame):
 
 
 def degisken_ozet_tablosu(veri: pd.DataFrame):
-    """
-    ADIM 3
-
-    Her değişken için temel özet bilgileri oluşturur.
-    """
-
     print("\n")
     print("=" * 90)
     print("ADIM 3 - DEĞİŞKEN ÖZET TABLOSU")
@@ -123,12 +90,6 @@ def degisken_ozet_tablosu(veri: pd.DataFrame):
 
 
 def tanimlayici_istatistikler(veri: pd.DataFrame):
-    """
-    ADIM 4
-
-    Ham veri üzerinde herhangi bir değişiklik yapmadan
-    tanımlayıcı istatistikleri raporlar.
-    """
 
     print("\n")
     print("=" * 90)
@@ -139,9 +100,6 @@ def tanimlayici_istatistikler(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası.
-    """
 
     veri_dosyasi = (
         Path(__file__).resolve().parent.parent

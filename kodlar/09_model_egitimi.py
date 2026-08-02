@@ -3,10 +3,6 @@ from pathlib import Path
 
 
 def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Belirtilen dizindeki CSV dosyasını, üzerinde hiçbir dönüştürme 
-    veya filtreleme işlemi yapmadan ham haliyle yükler.
-    """
     try:
         ham_veri = pd.read_csv(dosya_yolu)
         return ham_veri
@@ -16,19 +12,11 @@ def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def veri_sizintisi_risk_degerlendirmesi(veri: pd.DataFrame):
-    """
-    ANALİZ ADIMI
-
-    Veri setindeki her bir değişkeni zamanlama mantığına göre listeler.
-    Değişkenlerin randevu anındaki erişilebilirlik durumunu ve potansiyel 
-    veri sızıntısı risk durumunu (Düşük/Orta/Yüksek) gerekçesiyle raporlar.
-    """
     print("=" * 90)
     print("ANALİZ:KRONOLOJİK VERİ SIZINTISI (DATA LEAKAGE) RİSK DEĞERLENDİRMESİ")
     print("=" * 90)
 
-    # Veri setinde ampirik olarak varlığı tescillenmiş tüm sütunlar listelenir.
-    # Her değişkenin anlamı ve ham zamanlama mantığı tek tek matris olarak kurgulanmıştır.
+
     risk_matrisi = [
         {
             "Değişken Adı": "gender",
@@ -182,17 +170,15 @@ def veri_sizintisi_risk_degerlendirmesi(veri: pd.DataFrame):
         }
     ]
 
-    # Sonuçların pandas DataFrame yapısına aktarılması
     rapor_tablosu = pd.DataFrame(risk_matrisi)
     risk_ozeti = rapor_tablosu["Risk Durumu"].value_counts()
     
-    # Mevcut veri setindeki sütun isimleri ile eşleşen alanlar doğrulanır
+
     mevcut_sutunlar = veri.columns.tolist()
     rapor_tablosu["Veri Setinde Mevcut mu?"] = rapor_tablosu["Değişken Adı"].apply(
         lambda x: "Evet" if x in mevcut_sutunlar else "Hayır"
     )
 
-    # Rapor ekran çıktısı biçimlendirmesi
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', 1000)
     
@@ -207,10 +193,6 @@ def veri_sizintisi_risk_degerlendirmesi(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
-    # Proje dizin yapısına tam uyumlu dinamik veri yolu tanımı
     veri_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -222,7 +204,6 @@ def main():
     if ham_veri is None:
         return
 
-    # Veri sızıntısı risk değerlendirme fonksiyonunu çalıştırma
     veri_sizintisi_risk_degerlendirmesi(ham_veri)
 
 

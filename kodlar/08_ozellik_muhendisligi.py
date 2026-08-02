@@ -4,10 +4,6 @@ from pathlib import Path
 
 
 def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Belirtilen dizindeki CSV dosyasını, üzerinde hiçbir dönüştürme 
-    veya filtreleme işlemi yapmadan ham haliyle yükler.
-    """
     try:
         ham_veri = pd.read_csv(dosya_yolu)
         return ham_veri
@@ -17,19 +13,10 @@ def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
-    """
-    ANALİZ ADIMI
-
-    Yalnızca gerçekten sürekli sayısal olan değişkenleri seçer.
-    Pearson korelasyon matrisini hesaplar ve terminalde raporlar.
-    En yüksek doğrusal ilişkiye sahip değişken çiftlerini sıralı listeler.
-    """
     print("=" * 90)
     print("ANALİZ: HAM SÜREKLİ SAYISAL DEĞİŞKENLER PEARSON KORELASYON ANALİZİ")
     print("=" * 90)
 
-    # Protokol gereği yalnızca sürekli sayısal değişkenler analize dahil edilir.
-    # İkili (binary) bayraklar ve kategorik alanlar dışarıda bırakılmıştır.
     surekli_degiskenler = [
         "age",
         "average_temp_day",
@@ -38,7 +25,6 @@ def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
         "max_rain_day"
     ]
 
-    # Mevcut olan sütunlar üzerinden veri alt kümesi oluşturulur
     mevcut_sutunlar = [sutun for sutun in surekli_degiskenler if sutun in veri.columns]
     print(f"Analize Dahil Edilen Sürekli Değişken Sayısı : {len(mevcut_sutunlar)}")
     print()
@@ -47,8 +33,6 @@ def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
         print("Analiz için uygun sürekli sayısal değişken bulunamadı.")
         return
 
-    # Eksik değerler silinmez veya doldurulmaz, pandas corr() fonksiyonu 
-    # ham veri üzerindeki mevcut çiftleri (pairwise) esas alarak hesaplama yapar.
     korelasyon_matrisi = veri[mevcut_sutunlar].corr(method="pearson")
 
     print("[PEARSON KORELASYON MATRİSİ]")
@@ -58,14 +42,11 @@ def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
     print(korelasyon_matrisi.round(4))
     print("-" * 90)
 
-    # Matrisin alt ve üst üçgen tekrarlarını ve köşegen (1.0) değerlerini ayıklama
     print("\n[EN YÜKSEK MUTLAK KORELASYONA SAHİP DEĞİŞKEN ÇİFTLERİ]")
     print("-" * 90)
     
     korelasyon_serisi = korelasyon_matrisi.abs().unstack()
     sirali_korelasyon = korelasyon_serisi.sort_values(ascending=False)
-    
-    # Kendisiyle olan korelasyonları (1.0) ve mükerrer çiftleri filtreleme
     ayrik_ciftler = []
     gorulen_ciftler = set()
     
@@ -103,10 +84,6 @@ def korelasyon_matrisi_hesapla(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
-    # Proje dizin yapısına tam uyumlu dinamik veri yolu tanımı
     veri_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -118,7 +95,6 @@ def main():
     if ham_veri is None:
         return
 
-    # Korelasyon analiz fonksiyonunu çalıştırma
     korelasyon_matrisi_hesapla(ham_veri)
 
 

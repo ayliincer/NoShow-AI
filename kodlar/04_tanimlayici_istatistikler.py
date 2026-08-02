@@ -3,10 +3,6 @@ from pathlib import Path
 
 
 def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Veri setini hiçbir ön işleme veya dönüşüm uygulamadan
-    ham haliyle yükler.
-    """
     try:
         veri = pd.read_csv(dosya_yolu)
         return veri
@@ -16,12 +12,6 @@ def veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def yinelenen_kayit_tespiti(veri: pd.DataFrame):
-    """
-    ANALİZ ADIMI
-
-    Veri setindeki tam mükerrer satır sayısını, oranını ve olası 
-    kimlik bazlı tekrarları frekans düzeyinde hesaplayarak raporlar.
-    """
     print("=" * 90)
     print("ANALİZ: HAM VERİ YİNELENEN KAYIT (DUPLICATE RECORD) ANALİZİ")
     print("=" * 90)
@@ -33,20 +23,16 @@ def yinelenen_kayit_tespiti(veri: pd.DataFrame):
     print(f"Toplam Değişken Sayısı : {toplam_sutun}")
     print()
 
-    # 1. Tüm sütunlar bazında birebir aynı olan tam mükerrer satırların hesabı
     tam_mukerrer_sayisi = veri.duplicated().sum()
     tam_mukerrer_orani = (tam_mukerrer_sayisi / toplam_satir) * 100
 
     print(f"Tam Mükerrer Satır Sayısı     : {tam_mukerrer_sayisi:,}")
     print(f"Tam Mükerrer Satır Oranı (%)  : {tam_mukerrer_orani:.4f}")
     print("-" * 90)
-
-    # 2. Veri setinde hasta veya randevu belirteci olabilecek kimlik alanlarının 
-    # ham frekans düzeyinde mükerrerlik durumlarının tespiti
+    
     print("\n[Olası Kimlik Değişkenlerinin Tekrar Frekansları]")
     print("-" * 90)
     
-    # Ham veri şemasında yer alan olası kimlik öznitelikleri kontrol edilir
     olasi_kimlikler = ["PatientId", "AppointmentID", "patient_id", "appointment_id"]
     
     mevcut_kimlikler = [sutun for sutun in olasi_kimlikler if sutun in veri.columns]
@@ -75,10 +61,6 @@ def yinelenen_kayit_tespiti(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası ve akış yönetimi.
-    """
-    # Proje dizin yapısına tam uyumlu dinamik yol tanımı
     veri_dosyasi = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -90,7 +72,6 @@ def main():
     if veri is None:
         return
 
-    # Yinelenen kayıt analiz fonksiyonunu koşturma
     yinelenen_kayit_tespiti(veri)
 
 

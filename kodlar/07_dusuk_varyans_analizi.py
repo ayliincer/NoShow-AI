@@ -3,20 +3,6 @@ from pathlib import Path
 
 
 def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
-    """
-    Belirtilen dizindeki CSV dosyasını, üzerinde hiçbir dönüştürme 
-    veya filtreleme işlemi yapmadan ham haliyle yükler.
-
-    Parametre
-    ---------
-    dosya_yolu : str
-        CSV dosyasının yolu.
-
-    Döndürür
-    --------
-    pandas.DataFrame
-        Ham veri seti.
-    """
     try:
         ham_veri = pd.read_csv(dosya_yolu)
         return ham_veri
@@ -26,13 +12,6 @@ def ham_veri_setini_yukle(dosya_yolu: Path) -> pd.DataFrame:
 
 
 def dusuk_varyans_durum_tespiti(veri: pd.DataFrame):
-    """
-    ANALİZ ADIMI
-
-    Veri setindeki tüm değişkenler için benzersiz değer sayısını,
-    en sık görülen değerin frekansını ve bu değerin yüzde oranını hesaplar.
-    Sonuçları en yüksek yüzde oranına göre sıralayarak raporlar.
-    """
     print("=" * 90)
     print("ANALİZ: HAM VERİ SABİT VE DÜŞÜK VARYANSLI DEĞİŞKEN ANALİZİ")
     print("=" * 90)
@@ -43,13 +22,8 @@ def dusuk_varyans_durum_tespiti(veri: pd.DataFrame):
     varyans_ozet_verileri = []
 
     for sutun in veri.columns:
-        # İlgili sütunun ham serisi alınır
         seri = veri[sutun]
-        
-        # Benzersiz değer sayısı hesaplanır (eksik değerler dahil edilerek tam çeşitlilik ölçülür)
         benzersiz_sayisi = seri.nunique(dropna=False)
-        
-        # En sık görülen değerin tespiti için frekans tablosu çıkarılır
         frekans_serisi = seri.value_counts(dropna=False)
         
         if not frekans_serisi.empty:
@@ -69,18 +43,16 @@ def dusuk_varyans_durum_tespiti(veri: pd.DataFrame):
             "En Sık Değer Oranı (%)": en_sik_oran_yuzde
         })
 
-    # Elde edilen özet veriler pandas DataFrame yapısına dönüştürülür
     varyans_ozet_tablo = pd.DataFrame(varyans_ozet_verileri)
 
-    # En yüksek yüzde oranına göre büyükten küçüğe sıralanır
     sirali_tablo = varyans_ozet_tablo.sort_values(
         by="En Sık Değer Oranı (%)", ascending=False
     )
+    
     dusuk_varyans_sayisi = (
     sirali_tablo["En Sık Değer Oranı (%)"] >= 95
     ).sum()
 
-    # Tüm sütunların terminal ekranında tam hizalı gösterilmesi sağlanır
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 1000)
     
@@ -98,10 +70,6 @@ def dusuk_varyans_durum_tespiti(veri: pd.DataFrame):
 
 
 def main():
-    """
-    Programın başlangıç noktası ve modüler akış yönetimi.
-    """
-    # Proje dizin yapısına tam uyumlu dinamik veri yolu tanımı
     veri_yolu = (
         Path(__file__).resolve().parent.parent
         / "veriler"
@@ -113,7 +81,6 @@ def main():
     if ham_veri is None:
         return
 
-    # Sabit ve düşük varyans analiz fonksiyonunu çalıştırma
     dusuk_varyans_durum_tespiti(ham_veri)
 
 
