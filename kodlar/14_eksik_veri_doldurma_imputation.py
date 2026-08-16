@@ -1,0 +1,218 @@
+import pandas as pd
+import numpy as np
+from pathlib import Path
+BILINMIYOR_ETIKETI = "Bilinmiyor"
+
+
+def veri_setlerini_yukle(egitim_yolu: Path, test_yolu: Path) -> tuple:
+    try:
+        egitim_veri = pd.read_csv(egitim_yolu)
+        test_veri = pd.read_csv(test_yolu)
+        return egitim_veri, test_veri
+    except Exception as hata:
+        print(f"\nVeri setleri yüklenirken hata oluştu:\n{hata}")
+        return None, None
+
+
+def veri_tiplerini_ve_bosluklari_duzenle(veri: pd.DataFrame) -> pd.DataFrame:
+    kategorik_sutunlar = veri.select_dtypes(include=["object"]).columns
+    for sutun in kategorik_sutunlar:
+        if sutun not in ["appointment_date", "entry_service_date", "date_of_birth"]:
+            veri[sutun] = veri[sutun].astype(str).str.strip().replace("", np.nan)
+            veri[sutun] = veri[sutun].replace("nan", np.nan)
+
+    if "appointment_date" in veri.columns:
+        veri["appointment_date"] = pd.to_datetime(veri["appointment_date"], format="%Y-%m-%d", errors="coerce")
+    if "entry_service_date" in veri.columns:
+        veri["entry_service_date"] = pd.to_datetime(veri["entry_service_date"], format="%Y-%m-%d", errors="coerce")
+    if "date_of_birth" in veri.columns:
+        veri["date_of_birth"] = pd.to_datetime(veri["date_of_birth"], format="%d/%m/%Y", errors="coerce")
+
+    return veri
+
+
+def eksiklik_gostergelerini_ekle(veri: pd.DataFrame, aday_sutunlar: list) -> pd.DataFrame:
+    for sutun in aday_sutunlar:
+        if sutun in veri.columns:
+            yeni_ad = f"{sutun}_nan"
+            veri[yeni_ad] = veri[sutun].isnull().astype(int)
+    return veri
+
+
+def egitim_parametrelerini_hesapla(egitim_veri: pd.DataFrame) -> dict:
+    parametreler = {}
+
+    if "age" in egitim_veri.columns:
+        parametreler["age_median"] = egitim_veri["age"].median()
+
+    meteorolojik_sutunlar = ["average_temp_day", "average_rain_day", "max_temp_day", "max_rain_day"]
+    for sutun in meteorolojik_sutunlar:
+        if sutun in egitim_veri.columns:
+            parametreler[f"{sutun}_median"] = egitim_veri[sutun].median()
+
+    if "appointment_date" in egitim_veri.columns and "entry_service_date" in egitim_veri.columns:
+        fark_gunler = (egitim_veri["appointment_date"] - egitim_veri["entry_service_date"]).dt.days
+        gecerli_farklar = fark_gunler[fark_gunler >= 0]
+        if not gecerli_farklar.empty:
+            parametreler["lead_time_median_days"] = gecerli_farklar.median()
+        else:
+            raise ValueError(
+    "Lead Time medyanı hesaplanamadı."
+)
+    return parametreler
+
+
+def eksik_verileri_doldur(veri: pd.DataFrame, parametreler: dict) -> pd.DataFrame:
+    veri_dolu = veri.copy()
+
+    if "age" in veri_dolu.columns:
+        maske_age_hesapla = veri_dolu["age"].isnull() & veri_dolu["date_of_birth"].notnull()
+        if maske_age_hesapla.any():
+            veri_dolu.loc[maske_age_hesapla, "age"] = (
+                (veri_dolu.loc[maske_age_hesapla, "appointment_date"] - 
+                 veri_dolu.loc[maske_age_hesapla, "date_of_birth"]).dt.days / 365.25
+            ).round().astype(int)
+
+        yas_medyani = parametreler["age_median"]
+        veri_dolu["age"] = veri_dolu["age"].fillna(yas_medyani)
+
+    if "date_of_birth" in veri_dolu.columns:
+        maske_dob_hesapla = veri_dolu["date_of_birth"].isnull()
+        if maske_dob_hesapla.any():
+            veri_dolu.loc[maske_dob_hesapla, "date_of_birth"] = (
+                veri_dolu.loc[maske_dob_hesapla, "appointment_date"] - 
+                pd.to_timedelta(veri_dolu.loc[maske_dob_hesapla, "age"] * 365.25, unit="D")
+            )
+
+    if "entry_service_date" in veri_dolu.columns:
+        medyan_gun_farki = parametreler["lead_time_median_days"]
+        maske_entry_hesapla = veri_dolu["entry_service_date"].isnull()
+        if maske_entry_hesapla.any():
+            veri_dolu.loc[maske_entry_hesapla, "entry_service_date"] = (
+                veri_dolu.loc[maske_entry_hesapla, "appointment_date"] - 
+                pd.to_timedelta(medyan_gun_farki, unit="D")
+            )
+
+    meteorolojik_sutunlar = ["average_temp_day", "average_rain_day", "max_temp_day", "max_rain_day"]
+    for sutun in meteorolojik_sutunlar:
+        if sutun in veri_dolu.columns:
+            medyan_deger = parametreler[f"{sutun}_median"]
+            veri_dolu[sutun] = veri_dolu[sutun].fillna(medyan_deger)
+    kategorik_doldurulacak = ["icd", "specialty", "city", "disability"]
+    for sutun in kategorik_doldurulacak:
+        if sutun in veri_dolu.columns:
+            veri_dolu[sutun] = veri_dolu[sutun].fillna(BILINMIYOR_ETIKETI)
+
+    return veri_dolu
+
+
+def akademik_rapor_yazdir(ham_veri: pd.DataFrame, dolu_veri: pd.DataFrame, kume_adi: str):
+    print("\n" + "=" * 110)
+    print(f"AKADEMİK RAPOR: {kume_adi.upper()} VERİ KÜMESİ EKSİK VERİ DOLDURMA (IMPUTATION) SONUÇLARI")
+    print("=" * 110)
+
+    toplam_satir = len(ham_veri)
+    rapor_satirlari = []
+
+    for sutun in ham_veri.columns:
+        onceki_eksik = ham_veri[sutun].isnull().sum()
+        sonraki_eksik = dolu_veri[sutun].isnull().sum()
+        degisim = sonraki_eksik - onceki_eksik
+        doldurulan_oran = (onceki_eksik / toplam_satir) * 100
+
+        rapor_satirlari.append({
+            "Öznitelik": sutun,
+            "Başlangıç Eksik": onceki_eksik,
+            "Nihai Eksik": sonraki_eksik,
+            "Değişim": degisim,
+            "Doldurulan Oran (%)": doldurulan_oran
+        })
+
+    rapor_df = pd.DataFrame(rapor_satirlari)
+    degisenler = rapor_df[rapor_df["Başlangıç Eksik"] > 0].sort_values(by="Başlangıç Eksik", ascending=False)
+    
+    if not degisenler.empty:
+        print(degisenler.to_string(index=False))
+    else:
+        print("Veri kümesinde eksik değere sahip öznitelik bulunmamaktadır.")
+        
+    print("-" * 110)
+    print(f"Toplam Gözlem (Satır) Sayısı: {toplam_satir:,}")
+    print(f"Toplam Öznitelik (Sütun) Sayısı (Başlangıç): {ham_veri.shape[1]}")
+    print(f"Toplam Öznitelik (Sütun) Sayısı (Nihai): {dolu_veri.shape[1]}")
+
+    print(f"Yeni Oluşturulan Özellik Sayısı : {dolu_veri.shape[1] - ham_veri.shape[1]}")
+
+    print("\nEklenen Missing Indicator Özellikleri:")
+    print("- age_nan")
+    print("- entry_service_date_nan")
+    print("- average_temp_day_nan")
+    print("- average_rain_day_nan")
+    print("- max_temp_day_nan")
+    print("- max_rain_day_nan")
+
+    print("=" * 110)
+
+
+def veriyi_kaydet(veri: pd.DataFrame, dosya_yolu: Path):
+    kayit_kopya = veri.copy()
+
+    tarih_kolonlar = ["appointment_date", "entry_service_date", "date_of_birth"]
+    for sutun in tarih_kolonlar:
+        if sutun in kayit_kopya.columns and pd.api.types.is_datetime64_any_dtype(kayit_kopya[sutun]):
+            if sutun == "date_of_birth":
+                kayit_kopya[sutun] = kayit_kopya[sutun].dt.strftime("%d/%m/%Y")
+            else:
+                kayit_kopya[sutun] = kayit_kopya[sutun].dt.strftime("%Y-%m-%d")
+
+    kayit_kopya.to_csv(dosya_yolu, index=False, encoding="utf-8-sig")
+    print(f"Veri başarıyla kaydedildi: {dosya_yolu.name}")
+
+
+def main():
+    proje_dizini = Path(__file__).resolve().parent.parent
+    veriler_dizini = proje_dizini / "veriler"  
+    egitim_yolu = veriler_dizini / "medical_appointments_train.csv"
+    test_yolu = veriler_dizini / "medical_appointments_test.csv"
+
+    egitim_ham, test_ham = veri_setlerini_yukle(egitim_yolu, test_yolu)
+    if egitim_ham is None or test_ham is None:
+        return
+
+    egitim_ham_kopya = egitim_ham.copy()
+    test_ham_kopya = test_ham.copy()
+
+    egitim_analiz = veri_tiplerini_ve_bosluklari_duzenle(egitim_ham)
+    test_analiz = veri_tiplerini_ve_bosluklari_duzenle(test_ham)
+
+    gosterge_sutunlari = [
+        "age", 
+        "entry_service_date", 
+        "average_temp_day", 
+        "average_rain_day", 
+        "max_temp_day", 
+        "max_rain_day"
+    ]
+
+    egitim_gostergeli = eksiklik_gostergelerini_ekle(egitim_analiz, gosterge_sutunlari)
+    test_gostergeli = eksiklik_gostergelerini_ekle(test_analiz, gosterge_sutunlari)
+    print("\nEklenen Missing Indicator Sütunları:")
+
+    for sutun in gosterge_sutunlari:
+        print(f"- {sutun}_nan")
+
+    doldurma_parametreleri = egitim_parametrelerini_hesapla(egitim_gostergeli)
+    egitim_dolu = eksik_verileri_doldur(egitim_gostergeli, doldurma_parametreleri)
+    test_dolu = eksik_verileri_doldur(test_gostergeli, doldurma_parametreleri)
+    akademik_rapor_yazdir(egitim_ham_kopya, egitim_dolu, "Eğitim (Train)")
+    akademik_rapor_yazdir(test_ham_kopya, test_dolu, "Test (Test)")
+    veriyi_kaydet(egitim_dolu, egitim_yolu)
+    veriyi_kaydet(test_dolu, test_yolu)
+    print("\nNot:")
+    print("Eksik değer doldurma işlemleri yalnızca eğitim verisi üzerinde öğrenilen stratejiler kullanılarak gerçekleştirilmiştir.")
+    print("Test veri kümesinde eğitimden öğrenilen aynı dönüşüm kuralları uygulanmıştır.")
+    print("Bu yaklaşım veri sızıntısını (Data Leakage) önlemek amacıyla tercih edilmiştir.")
+
+
+if __name__ == "__main__":
+    main()

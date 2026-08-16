@@ -1,0 +1,5 @@
+﻿Metrik,Statik,Hibrit,Fark,GA_alt,GA_ust,t_p,wilcoxon_p
+Ort. Hasta Bekleme Süresi (dk),9.38,9.87,0.487,-0.126,1.101,0.1195,0.0456
+Hekim Atıl Süresi (dk/gün),31.78,0.0,-31.782,-32.606,-30.958,0.0,0.0
+Hekim Mesai Aşımı (dk/gün),13.26,13.6,0.34,-0.863,1.544,0.5792,0.5348
+Görülen Hasta Sayısı (gün),17.88,18.44,0.558,0.482,0.634,0.0,0.0

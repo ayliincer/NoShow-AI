@@ -32,7 +32,6 @@ def kardinalite_profilini_raporla(veri: pd.DataFrame, haric_tutulacaklar: list) 
         eksik_sayisi = veri[sutun].isnull().sum()
         veri_tipi = str(veri[sutun].dtype)
         
-        # SCI Hakem Kriteri: Kardinalite eşik değeri 15 olarak belirlenmiştir.
         if benzersiz_sayisi > 15:
             adaylik_durumu = "HAYIR (Yüksek Kardinalite Uyarısı)"
             strateji = "Target / Frequency Encoding Adayıdır"
