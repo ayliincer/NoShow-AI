@@ -9,9 +9,6 @@ KOK = Path(__file__).resolve().parent.parent
 
 
 def main(ornek_boyutu: int = 1000, random_state: int = 42):
-    # Madde 2 (danışman): downstream çıktılar sonuç tablosundaki modelle birebir
-    # eşleşmeli. Bu nedenle SHAP, script 30'un ürettiği "tam adil" v4 paketini yükler
-    # (hava durumu çıkarılmış, eşit optimize edilmiş, CV ile seçilmiş şampiyon).
     paket = joblib.load(KOK / "modeller" / "nihai_no_show_model_paketi_v4_tam_adil.joblib")
     model = paket["model"]
     model_adi = paket["model_adi"]
@@ -56,14 +53,14 @@ def main(ornek_boyutu: int = 1000, random_state: int = 42):
 
     plt.figure(figsize=(12, 8))
     shap.plots.beeswarm(shap_values_gorsel, max_display=20, show=False)
-    plt.title(f"SHAP Summary Plot ({model_adi})")  # DİNAMİK BAŞLIK
+    plt.title(f"SHAP Summary Plot ({model_adi})")
     plt.tight_layout()
     plt.savefig(gorseller_klasoru / "shap_summary_plot.png", dpi=150)
     plt.close()
 
     plt.figure(figsize=(12, 8))
     shap.plots.bar(shap_values_gorsel, max_display=20, show=False)
-    plt.title(f"Global Feature Importance ({model_adi} - SHAP)")  # DİNAMİK BAŞLIK
+    plt.title(f"Global Feature Importance ({model_adi} - SHAP)")
     plt.tight_layout()
     plt.savefig(gorseller_klasoru / "shap_bar_plot.png", dpi=150)
     plt.close()

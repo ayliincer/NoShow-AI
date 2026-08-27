@@ -1,20 +1,3 @@
-"""
-40_simulasyon_ikili_raporlama.py  (Danışman uyarısı: simülasyon ikili raporlama)
-
-Danışman notu: "Simülasyonun (20/21) değeri şu an rastgele-split'in iyimser
-olasılıklarına dayanıyor. Müdahale faydası hem iyimser (rastgele) hem gerçekçi
-(kronolojik, ~0,55) model altında raporlanırsa çok daha dürüst olur — gerçek
-dünyada kazanç muhtemelen küçülür."
-
-Bu script, overbooking simülasyonunu İKİ farklı olasılık kaynağıyla çalıştırır:
-  (A) İYİMSER  = v4 şampiyon (rastgele-split, ROC-AUC~0.775) olasılıkları
-  (B) GERÇEKÇİ = kronolojik model (2016-2020 eğitim, ROC-AUC~0.55) olasılıkları
-Her iki senaryoda statik vs overbooking politikası karşılaştırılır ve
-hekim atıl zamanı / görülen hasta kazancının iki rejim arasında NE KADAR
-değiştiği (yani iyimserliğin abartma payı) raporlanır.
-
-Mevcut 20/21/23 script'lerine DOKUNULMAZ; bu bağımsız bir doğrulamadır.
-"""
 import numpy as np
 import pandas as pd
 import joblib
@@ -24,8 +7,6 @@ from scipy import stats
 from sklearn.ensemble import RandomForestClassifier
 
 KOK = Path(__file__).resolve().parent.parent
-
-# Simülasyon parametreleri (20/21 ile aynı)
 GUN_SAYISI = 1500
 SLOT_SAYISI = 20
 SLOT_ARALIGI_DK = 20
@@ -51,31 +32,27 @@ def _hazirla_X(df, paket):
 
 
 def iyimser_olasiliklar():
-    """v4 şampiyon (rastgele-split) — mevcut simülasyonun kullandığı."""
     paket = joblib.load(KOK / "modeller" / "nihai_no_show_model_paketi_v4_tam_adil.joblib")
     test = pd.read_csv(KOK / "veriler" / "medical_appointments_test.csv")
     X = _hazirla_X(test, paket)
-    return paket["model"].predict_proba(X)[:, 1]
+    y_gercek = test["no_show"].map({"no": 0, "yes": 1}).to_numpy()
+    return paket["model"].predict_proba(X)[:, 1], y_gercek
 
 
 def gercekci_olasiliklar():
-    """Kronolojik model (2016-2020 eğitim) — aynı v4 öznitelik uzayında,
-    aynı dış test setine uygulanır. Böylece iki olasılık seti karşılaştırılabilir."""
     paket = joblib.load(KOK / "modeller" / "nihai_no_show_model_paketi_v4_tam_adil.joblib")
     cols = paket["sutun_siralamasi"]
 
     train = pd.read_csv(KOK / "veriler" / "medical_appointments_train.csv")
     test = pd.read_csv(KOK / "veriler" / "medical_appointments_test.csv")
-
-    # Eğitim: yalnızca 2016-2020; olasılık üretilecek yer: tüm dış test seti
     train_kron = train[train["appointment_year"] <= 2020].copy()
     Xtr = _hazirla_X(train_kron, paket)
     ytr = train_kron["no_show"].map({"no": 0, "yes": 1})
     Xte = _hazirla_X(test, paket)
-
     model = RandomForestClassifier(**RF)
     model.fit(Xtr, ytr)
-    return model.predict_proba(Xte)[:, 1]
+    y_gercek = test["no_show"].map({"no": 0, "yes": 1}).to_numpy()
+    return model.predict_proba(Xte)[:, 1], y_gercek
 
 
 def hasta_sureci(env, hekim, gelis, kayit):
@@ -88,8 +65,6 @@ def hasta_sureci(env, hekim, gelis, kayit):
 
 
 def tek_gun(olasiliklar, gunun_slotlari, gercek_gelme, politika, rng):
-    """gunun_slotlari: bugün ele alınacak hasta indeksleri (SLOT_SAYISI adet).
-    gercek_gelme: tam boy bool dizi (indeksle hizalı, iki senaryoda aynı)."""
     env = simpy.Environment()
     hekim = simpy.Resource(env, capacity=1)
     bekleme = []
@@ -97,7 +72,7 @@ def tek_gun(olasiliklar, gunun_slotlari, gercek_gelme, politika, rng):
         slot = i * SLOT_ARALIGI_DK
         if gercek_gelme[idx]:
             env.process(hasta_sureci(env, hekim, slot, bekleme))
-        # overbooking: modelin TAHMİNİNE göre karar (iyimser/gerçekçi farkı burada)
+
         if politika == "overbooking" and olasiliklar[idx] > YUKSEK_RISK_ESIGI:
             if rng.random() < 0.85:
                 env.process(hasta_sureci(env, hekim, slot + YEDEK_GECIKME_DK, bekleme))
@@ -109,8 +84,6 @@ def tek_gun(olasiliklar, gunun_slotlari, gercek_gelme, politika, rng):
 
 
 def senaryo_calistir(olasiliklar, gunluk_veri, etiket, rng_seed=42):
-    """gunluk_veri: [(slotlar, gercek_gelme), ...] — iki model senaryosunda AYNI.
-    Yalnızca modelin overbooking kararı değişir; gerçek dünya sabittir."""
     rng = np.random.default_rng(rng_seed)
     atil_statik, atil_over, gor_statik, gor_over = [], [], [], []
     for slotlar, gg in gunluk_veri:
@@ -134,25 +107,22 @@ def main():
     print("=" * 78)
 
     print("\nOlasılıklar üretiliyor...")
-    p_iyimser = iyimser_olasiliklar()
-    p_gercekci = gercekci_olasiliklar()
+    p_iyimser, y_gercek_iy = iyimser_olasiliklar()
+    p_gercekci, y_gercek = gercekci_olasiliklar()
     print(f"  İyimser  (v4/rastgele): ort={p_iyimser.mean():.3f}, "
           f">{YUKSEK_RISK_ESIGI} olan slot oranı={np.mean(p_iyimser>YUKSEK_RISK_ESIGI):.3f}")
     print(f"  Gerçekçi (kronolojik):  ort={p_gercekci.mean():.3f}, "
           f">{YUKSEK_RISK_ESIGI} olan slot oranı={np.mean(p_gercekci>YUKSEK_RISK_ESIGI):.3f}")
 
     print("\nSimülasyon çalışıyor (iki senaryo)...")
-    # Gerçek dünya (günün slotları + kimin geldiği) bir kez üretilir ve İKİ
-    # senaryoda da AYNIDIR. Gerçek no-show gözlenen prevalansa (~0.10) göre üretilir;
-    # modelin tahmininden bağımsızdır. Yalnızca modelin overbooking kararı değişir.
-    GERCEK_PREVALANS = 0.10
     gr = np.random.default_rng(999)
     n = len(p_iyimser)
+    gelmedi = (y_gercek == 1)
     gunluk_veri = []
     for _ in range(GUN_SAYISI):
         slotlar = gr.choice(n, size=SLOT_SAYISI, replace=False)
         gelme = np.ones(n, dtype=bool)
-        gelme[slotlar] = gr.random(SLOT_SAYISI) > GERCEK_PREVALANS
+        gelme[slotlar] = ~gelmedi[slotlar]
         gunluk_veri.append((slotlar, gelme))
 
     r_iyimser = senaryo_calistir(p_iyimser, gunluk_veri, "İyimser (rastgele)")
@@ -166,7 +136,6 @@ def main():
         iy, ge = r_iyimser[key], r_gercekci[key]
         print(f"{ad:<30} {iy:>14.2f} {ge:>14.2f} {iy-ge:>12.2f}")
 
-    # Overbooking'in atıl azaltmadaki etkisi iki rejimde anlamlı mı?
     t_iy, p_iy = stats.ttest_rel(r_iyimser["_atil_statik_dizi"], r_iyimser["_atil_over_dizi"])
     t_ge, p_ge = stats.ttest_rel(r_gercekci["_atil_statik_dizi"], r_gercekci["_atil_over_dizi"])
     print(f"\nOverbooking atıl azaltıyor mu? (eşleştirilmiş t-testi)")
@@ -178,7 +147,6 @@ def main():
         for r in [r_iyimser, r_gercekci]])
     kayit.to_csv(KOK / "veriler" / "simulasyon_ikili_raporlama.csv", index=False, encoding="utf-8-sig")
 
-    # İyimserliğin abartma payı
     if r_iyimser["gor_artis"] != 0:
         oran = r_gercekci["gor_artis"] / r_iyimser["gor_artis"]
         print("\n" + "=" * 78)

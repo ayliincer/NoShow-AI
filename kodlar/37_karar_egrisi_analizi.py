@@ -1,16 +1,3 @@
-"""
-37_karar_egrisi_analizi.py  (Hakem eksiği A: Decision Curve Analysis)
-
-ROC-AUC ayrım gücünü ölçer ama KLİNİK FAYDAYI ölçmez. Bir hakem, no-show gibi
-müdahale-odaklı bir çalışmada "modele göre hareket etmek, herkese/hiç kimseye
-müdahaleden daha mı iyi?" sorusunu sorar. Karar eğrisi analizi (Vickers & Elkin,
-2006) bunu net fayda (net benefit) ile yanıtlar.
-
-Net fayda = (TP/N) - (FP/N) * (pt/(1-pt)),  pt: eşik olasılık (müdahale maliyeti)
-
-Karşılaştırma: model vs "hepsine müdahale" vs "hiçbirine müdahale".
-v4 şampiyon model + saklı dış test seti kullanılır (hocanın belirlediği model).
-"""
 import numpy as np
 import pandas as pd
 import joblib
@@ -45,7 +32,6 @@ def net_fayda(y, proba, pt):
 
 
 def net_fayda_hepsi(y, pt):
-    # "hepsine müdahale" stratejisi
     prevalence = y.mean()
     return prevalence - (1 - prevalence) * (pt / (1 - pt))
 

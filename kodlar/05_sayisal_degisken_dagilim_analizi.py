@@ -1,9 +1,3 @@
-"""
-05_sayisal_degisken_dagilim_analizi.py
-
-Ham sayısal değişkenlerin dağılım ve şekil parametrelerini (ortalama, medyan,
-std, çarpıklık, basıklık) raporlayan keşifçi veri analizi. Salt-okunurdur.
-"""
 import pandas as pd
 from pathlib import Path
 

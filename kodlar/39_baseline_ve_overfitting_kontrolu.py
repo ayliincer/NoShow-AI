@@ -1,14 +1,3 @@
-"""
-39_baseline_ve_overfitting_kontrolu.py  (Hakem eksikleri: naive baseline + overfit)
-
-Bir hakem iki şey sorar:
-(1) Model, önemsiz bir "çoğunluk sınıfı / prevalans" tahmincisinden gerçekten
-    daha mı iyi? (naive baseline karşılaştırması)
-(2) Model eğitim setini ezberliyor mu? (train vs test AUC farkı = genelleme boşluğu)
-
-v4 şampiyon modelin train ve test AUC'lerini karşılaştırır ve naive baseline'ları
-raporlar. (Hocanın belirlediği v4 model ve öznitelik seti kullanılır.)
-"""
 import numpy as np
 import pandas as pd
 import joblib
@@ -42,7 +31,7 @@ def main():
     print("=" * 70)
     print("(1) NAIVE BASELINE KARŞILAŞTIRMASI (dış test)")
     print("=" * 70)
-    # Prevalans tabanlı baseline: herkese aynı olasılık (prevalans)
+
     prevalence = ytr.mean()
     baseline_proba = np.full(len(yte), prevalence)
     print(f"  Prevalans tahmincisi (herkes={prevalence:.3f}):")

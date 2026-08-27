@@ -1,13 +1,3 @@
-"""
-39_zaman_stabil_kismi_kurtarma.py
-
-BULGU: Kronolojik çöküşün başlıca nedeni, modelin döneme-özgü zamansal
-özniteliklere (appointment_year, appointment_month) aşırı bağlanmasıdır.
-Bu öznitelikler çıkarılıp yalnızca ZAMAN-STABİL öznitelikler kullanıldığında
-kronolojik performans kısmen geri kazanılır (ROC-AUC 0.55 -> 0.64), ancak
-rastgele-split (0.78) düzeyine ulaşmaz.
-Girdi: step02_pseudo_gecmis_dahil.csv (script 33 çıktısı).
-"""
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -33,6 +23,7 @@ def main():
     test = df[df["appointment_year"] >= 2021]
 
     aucler, prs = [], []
+    proba_son = None
     for rs in [42, 7, 123]:
         rf = RandomForestClassifier(n_estimators=400, max_depth=12, min_samples_leaf=10,
                                     max_features=0.5, random_state=rs, n_jobs=-1)
@@ -40,14 +31,18 @@ def main():
         proba = rf.predict_proba(test[STABIL])[:, 1]
         aucler.append(roc_auc_score(test["no_show_bin"], proba))
         prs.append(average_precision_score(test["no_show_bin"], proba))
+        if rs == 42:
+            proba_son = proba
 
-    # Madde 1 (danışman): F1-optimal eşik TEST'ten değil, EĞİTİM setinin (2016-2020)
-    # kendi tahminlerinden seçilip test'e SABİT uygulanır (eşik sızıntısı önlenir).
-    egitim_proba = rf.predict_proba(egitim[STABIL])[:, 1]
-    p_tr, r_tr, th_tr = precision_recall_curve(egitim["no_show_bin"], egitim_proba)
+    from sklearn.model_selection import cross_val_predict
+    oof_proba = cross_val_predict(
+        RandomForestClassifier(n_estimators=400, max_depth=12, min_samples_leaf=10,
+                               max_features=0.5, random_state=42, n_jobs=-1),
+        egitim[STABIL], egitim["no_show_bin"], cv=5, method="predict_proba")[:, 1]
+    p_tr, r_tr, th_tr = precision_recall_curve(egitim["no_show_bin"], oof_proba)
     f1_tr = 2 * p_tr * r_tr / (p_tr + r_tr + 1e-9)
     sabit_esik = th_tr[int(np.argmax(f1_tr[:-1]))]
-    pred = (proba >= sabit_esik).astype(int)
+    pred = (proba_son >= sabit_esik).astype(int)
 
     print("=" * 70)
     print("ZAMAN-STABİL ÖZNİTELİKLERLE KRONOLOJİK PERFORMANS")

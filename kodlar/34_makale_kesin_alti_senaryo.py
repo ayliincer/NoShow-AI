@@ -1,22 +1,3 @@
-"""
-34_makale_kesin_alti_senaryo.py  (MAKALE ANA BULGU TABLOSU — GENİŞLETİLMİŞ)
-
-Danışman Madde 3 doğrultusunda, "rastgele vs kronolojik" ikilisi ÜÇ bölme
-stratejisine genişletilmiştir; böylece performans düşüşü "hasta sızıntısı" ve
-"zamansal kayma" bileşenlerine ayrıştırılır:
-
-  1) SATIR-RASTGELE  (StratifiedShuffleSplit): aynı hasta iki tarafta olabilir
-                      -> hasta-düzeyi ezberleme (sızıntı) mümkün, en iyimser
-  2) HASTA-GRUPLU    (GroupShuffleSplit, groups=pseudo_id): zamanda rastgele
-                      ama hasta-ayrık -> hasta sızıntısı YOK
-  3) KRONOLOJİK      (2016-2020 -> 2021-2022): hem hasta-ayrık hem zamansal kayma
-
-Her biri {geçmiş YOK, geçmiş VAR} ile çarpılır => 6 hücrelik temiz ızgara.
-Beklenen: hasta-gruplu skor, satır-rastgele (~0.78) ile kronolojik (~0.55)
-arasında oturur; aradaki fark hasta sızıntısının payını verir.
-
-Girdi: step02_pseudo_gecmis_dahil.csv (script 33 çıktısı; pseudo_id içerir).
-"""
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -25,10 +6,12 @@ from sklearn.model_selection import StratifiedShuffleSplit, GroupShuffleSplit
 from sklearn.metrics import roc_auc_score, average_precision_score, brier_score_loss
 
 KOK = Path(__file__).resolve().parent.parent
-# Manşet sayılar için TEK sabit RF konfigürasyonu (danışman Madde 6: tutarlılık)
+
 RF = dict(n_estimators=500, max_depth=25, min_samples_leaf=1, min_samples_split=10,
           max_features=0.5, random_state=42, n_jobs=-1)
+
 GECMIS = ["gecmis_randevu_sayisi", "gecmis_no_show_sayisi", "gecmis_no_show_orani", "ilk_ziyaret_mi"]
+
 HAVA = ["average_temp_day", "average_rain_day", "max_temp_day", "max_rain_day",
         "rainy_day_before", "storm_day_before", "rain_intensity", "heat_intensity",
         "temp_range", "rain_range"]
@@ -72,10 +55,8 @@ def bol(df, strateji):
         sss = StratifiedShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
         i_tr, i_te = next(sss.split(df, df["no_show_bin"]))
         return df.iloc[i_tr].copy(), df.iloc[i_te].copy()
+    
     if strateji == "hasta_gruplu":
-        # pseudo_id NaN olan kayıtlar (doğum tarihi/şehir eksik) tekil hasta sayılır:
-        # her birine benzersiz bir grup atanır ki hasta-ayrıklık bozulmadan, veri
-        # kaybı olmadan GroupShuffleSplit uygulanabilsin.
         gruplar = df["pseudo_id"].copy()
         nan_maske = gruplar.isna()
         gruplar = gruplar.astype("object")
@@ -83,6 +64,7 @@ def bol(df, strateji):
         gss = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
         i_tr, i_te = next(gss.split(df, df["no_show_bin"], groups=gruplar))
         return df.iloc[i_tr].copy(), df.iloc[i_te].copy()
+    
     if strateji == "kronolojik":
         return df[df["appointment_year"] <= 2020].copy(), df[df["appointment_year"] >= 2021].copy()
     raise ValueError(strateji)
@@ -93,7 +75,6 @@ def degerlendir(df, strateji, gecmis_dahil):
     Xtr, ytr, Xte, yte = kodla(egitim, test, gecmis_dahil)
     m = RandomForestClassifier(**RF); m.fit(Xtr, ytr)
     proba = m.predict_proba(Xte)[:, 1]
-    # Ana sonuç için bootstrap %95 GA (danışman Madde 6)
     rng = np.random.default_rng(42)
     boots = []
     yte_arr = yte.values
@@ -132,7 +113,6 @@ def main():
 
     pd.DataFrame(sonuc).to_csv(KOK / "veriler" / "makale_KESIN_alti_senaryo.csv", index=False, encoding="utf-8-sig")
 
-    # Sızıntı payı ayrıştırması (geçmiş YOK satırları üzerinden)
     g = {s["Bölme"]: s["ROC-AUC"] for s in sonuc if s["Geçmiş"] == "geçmiş YOK"}
     satir = g[stratejiler[0][1]]; grup = g[stratejiler[1][1]]; kron = g[stratejiler[2][1]]
     print("\n" + "=" * 100)

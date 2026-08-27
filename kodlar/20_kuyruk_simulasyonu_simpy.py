@@ -1,16 +1,3 @@
-"""
-20_kuyruk_simulasyonu_simpy.py
-
-Kesikli Olay Simülasyonu (SimPy) ile no-show tahminine dayalı aşırı rezervasyon
-(overbooking) politikasının operasyonel etkisini test eder.
-
-POLİTİKA B (hibrit - KOŞULSUZ): Model bir slotu yüksek riskli (olasılık >
-YUKSEK_RISK_ESIGI) işaretlerse, birincil hasta gelse de gelmese de yedek çağrılır.
-
-Madde 2 (danışman): sonuç tablosundaki modelle aynı olasılıklar kullanılmalı;
-bu nedenle script 30'un ürettiği v4 "tam adil" paketi yüklenir (hava durumsuz,
-scaler'sız). Politika C (koşullu aktivasyon) için bkz. 21.
-"""
 import numpy as np
 import pandas as pd
 import simpy

@@ -1,14 +1,3 @@
-"""
-38_alt_grup_adalet_analizi.py  (Hakem eksiği C: Subgroup / Fairness)
-
-Bir hakem, modelin farklı hasta alt gruplarında (cinsiyet, yaş) eşit çalışıp
-çalışmadığını sorar. Model bir alt grupta belirgin daha kötü ayrım yapıyorsa,
-bu bir adalet (fairness) sorunudur ve dağıtımda zarar doğurabilir.
-
-Bu script, v4 şampiyon modelin saklı dış test setindeki tahminlerini cinsiyet
-ve yaş grubuna göre ayırıp her alt grupta ROC-AUC, no-show oranı ve örneklem
-büyüklüğü raporlar. (Hocanın belirlediği v4 model kullanılır.)
-"""
 import numpy as np
 import pandas as pd
 import joblib
@@ -54,7 +43,6 @@ def main():
     print("ALT-GRUP / ADALET ANALİZİ (v4 şampiyon model, dış test)")
     print("=" * 70)
 
-    # Cinsiyet (one-hot'tan geri çıkar)
     print("\n--- Cinsiyet ---")
     for kolon, ad in [("gender_F", "Kadın"), ("gender_M", "Erkek")]:
         if kolon in ham.columns:
@@ -63,7 +51,7 @@ def main():
             kayit.append({"boyut": "cinsiyet", **r})
             print(f"  {ad:8s}: N={r['N']:5d}  no-show={r['no_show_oran']:.3f}  AUC={r['ROC-AUC']:.3f}")
 
-    # Yaş grubu
+
     print("\n--- Yaş grubu ---")
     if "age" in ham.columns:
         yas = ham["age"].values
@@ -77,7 +65,6 @@ def main():
     df = pd.DataFrame(kayit)
     df.to_csv(KOK / "veriler" / "alt_grup_adalet_analizi.csv", index=False, encoding="utf-8-sig")
 
-    # Adalet yorumu: alt gruplar arası AUC farkı
     auc_deg = df["ROC-AUC"].dropna()
     print("\n" + "=" * 70)
     print("YORUM:")

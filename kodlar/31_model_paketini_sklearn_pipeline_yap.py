@@ -54,8 +54,6 @@ class NoShowOnIslemci(BaseEstimator, TransformerMixin):
 
 
 def main():
-    # Madde 2 (danışman): standalone pipeline, sonuç tablosundaki modelle
-    # birebir eşleşmesi için script 30'un ürettiği "tam adil" v4 paketinden üretilir.
     eski = joblib.load(KOK / "modeller" / "nihai_no_show_model_paketi_v4_tam_adil.joblib")
     model = eski["model"]
     train_ham = pd.read_csv(KOK / "veriler" / "medical_appointments_train.csv")

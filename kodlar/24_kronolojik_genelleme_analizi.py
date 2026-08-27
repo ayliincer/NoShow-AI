@@ -53,7 +53,6 @@ def main():
     print("1) TEK KRONOLOJİK BÖLÜNME: 2016-2020 eğitim -> 2021-2022 test")
     print("=" * 100)
     r_tek = egit_test_et(tum, [y for y in yillar if y <= 2020], None)
-    # Özel durum: 2021-2022 birlikte test
     ktr = tum[tum["appointment_year"] <= 2020].copy()
     kte = tum[tum["appointment_year"] >= 2021].copy()
     freq = ktr["icd"].value_counts(normalize=True)

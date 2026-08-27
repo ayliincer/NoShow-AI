@@ -15,9 +15,6 @@ GUNLUK_SIMULASYON_TEKRARI = 2500
 
 
 def sampiyon_modelin_gercek_olasiliklarini_yukle(kok: Path) -> np.ndarray:
-    # Madde 2 (danışman): simülasyon, sonuç tablosundaki modelle aynı olasılıkları
-    # kullanmalı. Bu nedenle script 30'un ürettiği "tam adil" v4 paketi yüklenir.
-    # v4 paketi hava durumsuz/temizdir ve scaler içermez (RF ölçeklemeden etkilenmez).
     model_yolu = kok / "modeller" / "nihai_no_show_model_paketi_v4_tam_adil.joblib"
     test_yolu = kok / "veriler" / "medical_appointments_test.csv"
 
@@ -84,7 +81,7 @@ def tek_gun_simule_et(hasta_df: pd.DataFrame, politika: str, rng: np.random.Gene
                 env, f"Hasta-{satir['slot_no']}", satir["slot_zamani_dk"], hekim, muayene_rng, sonuclar
             ))
         elif politika == "statik":
-            sonuclar["atil_slot_sayisi"] += 1  # kimse gelmedi, slot tamamen boşa gitti
+            sonuclar["atil_slot_sayisi"] += 1
 
         if politika == "hibrit" and satir["no_show_olasiligi"] > YUKSEK_RISK_ESIGI:
             yedek_gelis_ihtimali = rng.random() < 0.85

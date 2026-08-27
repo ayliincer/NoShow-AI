@@ -1,17 +1,3 @@
-"""
-36_cokusun_mekanizmasi.py  (Danışman Madde 4)
-
-Kronolojik çöküşün mekanizmasını nicelleştirir. "No-show oranı arttı" ifadesini
-somut kanıtlarla destekler ve düşüşü label shift / covariate shift / concept
-drift ayrımıyla çerçeveler:
-
-  (a) Yıl bazında no-show taban oranı (prior) — label shift göstergesi
-  (b) Yıl bazında AUC (kronolojik modelin her yıl üzerindeki ayrımı)
-  (c) Kronolojik test setinde kalibrasyon (Brier + güvenilirlik eğrisi verisi)
-  (d) appointment_year/month'a bağımlılık (drop-column importance)
-
-Girdi: step02_pseudo_gecmis_dahil.csv
-"""
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -62,7 +48,6 @@ def main():
     df = ozellik_uret(df)
     df["no_show_bin"] = (df["no_show"] == "yes").astype(int)
 
-    # (a) Yıl bazında taban oran (label/prior shift)
     print("=" * 70)
     print("(a) YIL BAZINDA NO-SHOW TABAN ORANI (prior / label shift göstergesi)")
     print("=" * 70)
@@ -70,14 +55,13 @@ def main():
     for yil, satir in yil_oran.iterrows():
         print(f"  {int(yil)}: taban oran={satir['mean']:.3f}  (N={int(satir['count'])})")
 
-    # Kronolojik model eğit
+
     egitim = df[df["appointment_year"] <= 2020]
     test = df[df["appointment_year"] >= 2021]
     Xtr, ytr, Xte, yte, test_df = kodla(egitim, test)
     m = RandomForestClassifier(**RF); m.fit(Xtr, ytr)
     proba = m.predict_proba(Xte)[:, 1]
 
-    # (b) Test dönemi yıl bazında AUC
     print("\n" + "=" * 70)
     print("(b) KRONOLOJİK MODELİN TEST DÖNEMİ YIL BAZINDA AUC'si")
     print("=" * 70)
@@ -88,7 +72,6 @@ def main():
             print(f"  {int(yil)}: AUC={roc_auc_score(alt['_y'], alt['_proba']):.3f}  "
                   f"taban={alt['_y'].mean():.3f}  (N={len(alt)})")
 
-    # (c) Kalibrasyon (Brier + güvenilirlik eğrisi verisi)
     print("\n" + "=" * 70)
     print("(c) KRONOLOJİK TEST KALİBRASYONU")
     print("=" * 70)
@@ -100,7 +83,6 @@ def main():
     kal = pd.DataFrame({"tahmin_ort": mean_pred, "gercek_oran": frac_pos})
     kal.to_csv(KOK / "veriler" / "kronolojik_kalibrasyon.csv", index=False, encoding="utf-8-sig")
 
-    # (d) appointment_year/month'a bağımlılık: drop-column importance
     print("\n" + "=" * 70)
     print("(d) TAKVİM ÖZNİTELİKLERİNE BAĞIMLILIK (drop-column importance)")
     print("=" * 70)
@@ -115,7 +97,6 @@ def main():
     print(f"  -> Takvim özniteliklerini çıkarmak kronolojik AUC'yi {'artırıyor' if auc2>base_auc else 'düşürüyor'};")
     print(f"     bu, modelin durağan-olmayan takvim sinyaline zararlı bağımlılığını gösterir.")
 
-    # Özet CSV
     pd.DataFrame([{
         "toplam_yil_bazinda_taban_artisi": f"{yil_oran['mean'].min():.3f}->{yil_oran['mean'].max():.3f}",
         "kronolojik_brier": brier, "ort_tahmin": proba.mean(), "gercek_taban": yte.mean(),

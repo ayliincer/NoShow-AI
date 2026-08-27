@@ -67,9 +67,6 @@ def main():
     from sklearn.model_selection import cross_val_predict
 
     def egitimde_esik_sec(model, X_tr, y_tr):
-        # Madde 1 (danışman): F1-optimal eşik TEST'ten DEĞİL, eğitim setinde
-        # 5-katlı CV out-of-fold olasılıklarından seçilir; sonra test'e SABİT
-        # uygulanır. Böylece eşik seçimi test etiketlerinden sızmaz.
         oof = cross_val_predict(model, X_tr, y_tr, cv=5, method="predict_proba", n_jobs=-1)[:, 1]
         p, r, th = precision_recall_curve(y_tr, oof)
         f1s = 2 * p * r / (p + r + 1e-12)
@@ -78,7 +75,6 @@ def main():
     sonuclar = []
     model_nesneleri = {}
     for isim, model in modeller.items():
-        # Eşik, modeli test'e hiç dokunmadan, yalnızca eğitim setinde seç
         best_thresh = egitimde_esik_sec(model, X_train, y_train)
 
         model.fit(X_train, y_train)
@@ -86,7 +82,6 @@ def main():
         pred_05 = model.predict(X_test)
         model_nesneleri[isim] = model
 
-        # Eğitimde seçilen eşik test'e SABİT uygulanır (yeniden seçilmez)
         pred_opt = (proba >= best_thresh).astype(int)
 
         satir = {
