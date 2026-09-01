@@ -1,148 +1,90 @@
 # NoShow-AI
-TÜBİTAK 2209-A - AI-based Patient No-Show Prediction System
-# Explainable AI-Based Dynamic No-Show Prediction System
 
-## Overview
+**Hasta Randevu Devamsızlığı (No-Show) Tahmininde Performans Düşüşünün Ayrıştırılması: Hasta Sızıntısı ve Zamansal Kayma Bileşenleri Üzerine Bir Vaka Çalışması**
 
-This project presents an explainable machine learning pipeline for predicting outpatient appointment no-shows using electronic healthcare records.
-
-The pipeline includes:
-
-- Exploratory Data Analysis (EDA)
-- Missing Value Analysis
-- Duplicate Record Analysis
-- Outlier Detection
-- Descriptive Statistics
-- Correlation Analysis
-- Feature Engineering
-- Missing Data Imputation
-- Categorical Encoding
-- Model Development
-- Cross Validation
-- External Validation
-- Explainable Artificial Intelligence (SHAP)
-- Model Serialization
-
-The project follows a leakage-aware machine learning workflow to ensure scientific validity.
+Bu depo, poliklinik randevu devamsızlığı (no-show) tahmini için geliştirilen makine öğrenmesi modelinin kodlarını, analiz sonuçlarını ve akademik makale taslağını içerir. Çalışmanın merkezinde, literatürde yaygın olarak kullanılan rastgele doğrulamanın performansı nasıl abarttığı ve bu abartının hangi bileşenlerden kaynaklandığı sorusu yer alır.
 
 ---
 
-## Dataset
+## Özet
 
-**Primary Dataset (actually used throughout the pipeline) — KAYNAK ÇÖZÜLDÜ:**
+Sağlık hizmetlerinde randevu devamsızlığı, hekim atıl zamanına ve kaynak israfına yol açan önemli bir operasyonel sorundur. Bu çalışmada, çok yıllı (2016–2022) bir rehabilitasyon merkezi verisi üzerinde bir devamsızlık tahmin modeli geliştirilmiş ve model performansı **üç farklı doğrulama stratejisiyle** karşılaştırılmıştır. Amaç, raporlanan başarının ne kadarının gerçek genelleme, ne kadarının veri sızıntısı kaynaklı olduğunu ayrıştırmaktır.
 
-- File: `veriler/medical-appointments-no-show-en.csv` → `medical_appointments_preprocessed_step01/02.csv` → `medical_appointments_train/test.csv`
-- ~49.593 ham randevu kaydı (2016–2022); specialty (fizyoterapi/psikoterapi/konuşma terapisi vb.), city (13 Brezilya belediyesi), disability status, ICD kodu, hava durumu (sıcaklık/yağış) değişkenleri, appointment year içerir.
-- **Kaynak (doğrulandı, web araştırmasıyla tespit edildi):** Bu veri seti, Universidade do Vale do Itajaí (UNIVALI) **Fiziksel ve Zihinsel Rehabilitasyon Uzmanlık Merkezi'nin (CER)** hasta randevu kayıtlarına dayanmaktadır. Orijinal 4.812 kayıtlık pilot veri seti ve metodoloji şu makalede yayınlanmıştır:
+## Ana Bulgu
 
-  > Salazar, L.H.A.; Leithardt, V.R.Q.; Parreira, W.D.; da Rocha Fernandes, A.M.; Barbosa, J.L.V.; Correia, S.D. (2022). "Application of Machine Learning Techniques to Predict a Patient's No-Show in the Healthcare Sector." *Future Internet*, 14(1), 3. https://doi.org/10.3390/fi14010003
+Aynı model (Random Forest), doğrulama stratejisine göre çarpıcı biçimde farklı performans göstermektedir:
 
-  Bu makale, projenin başındaki TÜBİTAK metnindeki gizemli **"4.812"** rakamının kaynağıdır (makalede: *"4812 medical records from an electronic spreadsheet of 2017 and 2019"*). Sütun yapısı (disability type, entry-into-service date, city, ICD, INMET meteorolojik verisi — Itajaí şehri için) bizim veri setimizle birebir örtüşmektedir. Makalenin "Gelecek Çalışma" bölümü, *"güney Brezilya'daki tüm halk sağlığı sistemi randevularını kapsayan daha büyük bir veri seti toplama sürecinde olduklarını"* belirtmektedir — bizim 2016–2022 dönemini kapsayan genişletilmiş (49.593 satırlık) veri setimiz büyük olasılıkla bu takip çalışmasıdır.
-- **Etik kurul onayı:** Orijinal (2019) CER veri seti için Univali Etik Kurulu onayı mevcuttur (karar no 4270.234, LGPD/GDPR uyumlu). Genişletilmiş (2016–2022) veri setinin aynı/güncellenmiş bir etik onay kapsamında olup olmadığı makale yazarları tarafından teyit edilmeli ve makalede belirtilmelidir.
-- **Not:** Hasta kimliği (patient ID) bu veri setinde yoktur, bu nedenle hasta bazlı geçmiş öznitelikler (örn. önceki no-show sayısı) türetilememektedir — bkz. kronolojik genelleme bulgusu.
+| Doğrulama Stratejisi | ROC-AUC (%95 GA) | Ne gösterir |
+|---|---|---|
+| Satır-rastgele (sızıntı var) | 0,775 [0,760–0,791] | Literatürün tipik, iyimser raporu |
+| Hasta-ayrık (GroupShuffleSplit) | 0,658 [0,638–0,677] | Hasta sızıntısı temizlenince |
+| Kronolojik (2016–2020 → 2021–2022) | 0,548 [0,532–0,563] | Gerçek prospektif performans |
 
-**`KaggleV2-May-2016.csv` (repoda duruyor ama pipeline'da KULLANILMIYOR):**
+Toplam **0,227**'lik düşüşün yaklaşık yarısı (**−0,117**) hasta sızıntısına, diğer yarısı (**−0,110**) zamansal kaymaya atfedilmektedir. Bu ayrıştırma, no-show tahmini literatüründeki bir boşluğu doldurmaktadır: performans düşüşü genellikle yalnızca "zamansal" olarak açıklanırken, bu çalışma önemli bir kısmının hasta-düzeyi ezberlemeden (grup sızıntısı) kaynaklandığını göstermektedir.
 
-- Bu, iyi bilinen halka açık Kaggle "Medical Appointment No Shows" veri setidir (Vitória, Espírito Santo, Brezilya), 110.527 satır, sadece Nisan–Haziran 2016'yı kapsar. **Bizim projemizle ilgisi yoktur** — farklı bir şehir/sistem, farklı sütun yapısı. Salazar ve ark. (2022) makalesi de bu Kaggle veri setinden AYRI, kendi topladıkları bir veri seti kullandıklarını açıkça belirtmektedir (makalede: *"the lack of information about how [Kaggle] data was pre-processed... we have opted to collect the dataset on our own"*).
+## Metodolojik İlkeler
 
-**Bilinen sınırlama (kritik):** Birincil veri seti 2016–2022'yi kapsamakta ve zaman içinde belirgin bir no-show oranı artışı göstermektedir (~%4'ten ~%20'ye). Gerçek kronolojik (ileriye dönük) doğrulama, eğitilen modelin ayırt edicilik gücünün eğitim penceresi boyutundan bağımsız olarak neredeyse şans seviyesine (ROC-AUC ≈ 0.53) düştüğünü göstermektedir (bkz. `kodlar/25_kronolojik_genelleme_analizi.py` ve `veriler/kronolojik_genisleyen_pencere_dogrulama.csv`). Bu repodaki diğer yerlerde raporlanan ROC-AUC=0.7753 değeri, tabakalı RASTGELE train/test bölünmesini yansıtır ve prospektif/dağıtım geçerliliğinin kanıtı olarak yorumlanmamalıdır.
+- **Sızıntısız ön işleme:** Tüm parametreler (imputation medyanları, ICD frekans kodlaması, kategorik kodlama) yalnızca eğitim setinden öğrenilir.
+- **İzole model seçimi:** Şampiyon model yalnızca eğitim seti + çapraz doğrulama ile seçilir; saklı dış test setine tek kez dokunulur.
+- **Sızıntısız eşik seçimi:** Sınıflandırma eşiği eğitim setinde seçilip test setine sabit uygulanır.
+- **Adil karşılaştırma:** Dört topluluk algoritması (Random Forest, XGBoost, LightGBM, CatBoost) eşit koşullarda ve ayrı ayrı optimize edilir.
+- **Zamansal sızıntı önleme:** Randevu gününün gerçekleşmiş hava durumu değişkenleri (randevu anında bilinemez) modelden çıkarılır.
 
----
-
-## Machine Learning Models
-
-The following algorithms are evaluated:
-
-- Logistic Regression
-- Decision Tree
-- Random Forest
-- XGBoost
-- LightGBM
-- CatBoost
-
----
-
-## Explainable AI
-
-Model interpretation is performed using SHAP.
-
-Generated explanations include
-
-- SHAP Summary Plot
-- SHAP Bar Plot
-
----
-
-## Project Structure
+## Depo Yapısı
 
 ```
-NoShow-AI
-│
-├── kodlar/
-├── veriler/
-├── modeller/
-├── gorseller/
-├── makale/
-├── README.md
-└── requirements.txt
+NoShow-AI/
+├── kodlar/       # Numaralı, sıralı pipeline script'leri (01–40) + notlar
+├── veriler/      # Analiz sonuç dosyaları (CSV) — ham veri hariç (bkz. Veri Erişimi)
+├── modeller/     # Model üretim README'si (ağır .joblib dosyaları hariç)
+├── raporlar/     # Akademik makale taslağı ve değerlendirme belgeleri
+├── makale/       # Makale kaynakları (kaynakça, notlar)
+├── gorseller/    # Grafikler ve şekiller
+├── requirements.txt
+└── README.md
 ```
 
----
-
-## Installation
+## Kurulum
 
 ```bash
-git clone <repository>
-
-cd NoShow-AI
-
 pip install -r requirements.txt
 ```
 
----
+Başlıca bağımlılıklar: `scikit-learn`, `pandas`, `numpy`, `shap`, `lightgbm`, `catboost`, `xgboost`, `simpy`, `scipy`, `matplotlib`.
 
-## Running
+## Pipeline Çalıştırma Sırası
 
-Execute the Python scripts sequentially.
+Ayrıntılı sıra için `kodlar/PIPELINE_SIRASI.md` dosyasına bakınız. Özetle:
 
-```
-01_veri_seti_genel_bakis.py
+1. **Keşifçi analiz (01–09):** Veri genel bakış, eksik veri, korelasyon, sızıntı riski.
+2. **Ön işleme (10–16):** Bölme, tarih dönüşümü, imputation, öznitelik mühendisliği, kodlama.
+3. **Model seçimi ve optimizasyon (25–31):** Adil karşılaştırma, hiperparametre optimizasyonu, şampiyon model + dış test, pipeline paketi.
+4. **Doğrulama ve analiz (32–40):** Hasta geçmişi öznitelikleri, altı-senaryo ızgarası, çöküş mekanizması, karar eğrisi, alt-grup adalet, simülasyon ikili raporlama.
 
-↓
+## Ek Analizler
 
-02_eksik_veri_ve_tekrarlayan_kayitlar.py
+- **Karar eğrisi analizi (script 37):** Model, makul eşik aralığında "hepsine/hiçbirine müdahale" stratejilerinden daha yüksek klinik net fayda sağlar.
+- **Alt-grup adalet (script 38):** Cinsiyet ve yaş grupları arası ROC-AUC farkı yalnızca 0,029; model gruplar arası tutarlıdır.
+- **Pseudo-ID duyarlılık analizi (script 32, 35):** Vekil hasta kimliğinin çakışma/bölünme oranları ölçülmüş; zaman-stabil kurtarmanın (0,548→0,642) büyük kısmının temel özniteliklerden geldiği, proxy geçmişinin katkısının yalnızca +0,009 olduğu doğrulanmıştır.
+- **Simülasyon ikili raporlama (script 40):** Overbooking faydası hem iyimser (rastgele) hem gerçekçi (kronolojik) model altında, gerçek (gözlenmiş) test etiketleri yer gerçeği alınarak raporlanır; gerçekçi rejimdeki kazanç iyimserin yaklaşık dörtte biri kadardır.
 
-↓
+## Veri Erişimi
 
-...
+Ham ve işlenmiş hasta verisi, gizlilik (veri koruma / etik kurul) ve boyut nedeniyle bu depoya **dahil edilmemiştir**. Depo yalnızca analiz sonuç dosyalarını (CSV) içerir. Ham veri, ilgili kurumun etik onayı çerçevesinde talep üzerine sağlanabilir; elde edildikten sonra ön işleme script'leri (10–16) ile işlenmiş dosyalar yeniden üretilebilir.
 
-↓
+## Sınırlamalar
 
-20_modeli_diske_kaydet.py
-```
+Çalışma tek bir merkeze ait veriye dayanmaktadır. Hasta geçmişi öznitelikleri, doğrudan hasta kimliği bulunmadığından doğum tarihi–cinsiyet–şehir tabanlı bir vekil kimlik üzerinden geçmişe-dönük olarak türetilmiştir. Kronolojik değerlendirme tek bir bölünme noktasına dayanır ve çalışma prospektif bir dağıtımla henüz doğrulanmamıştır. Ayrıntılar için makale taslağının Sınırlamalar bölümüne bakınız.
 
----
+## Yazarlar
 
-## Output
+- Aylin Cer
+- Beyza Nur Dinçer
 
-The project produces
+Yönetim Bilişim Sistemleri, Karadeniz Teknik Üniversitesi
 
-- Cleaned datasets
-- Feature engineered datasets
-- Cross-validation results
-- External validation results
-- SHAP visualizations
-- Serialized production-ready model
+## Lisans ve Atıf
 
----
-
-## Author
-
-Aylin Cer
-Beyza Nur Dinçer
-
-Management Information Systems (MIS)
-
-Karadeniz Technical University
+Bu depo akademik bir çalışmanın parçasıdır. Kullanım ve atıf için lütfen depo sahipleriyle iletişime geçiniz.
 
 ---
