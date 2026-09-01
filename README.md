@@ -146,29 +146,3 @@ Management Information Systems (MIS)
 Karadeniz Technical University
 
 ---
-
-## License
-
-This project is developed for academic research purposes.
----
-
-## ÖNEMLİ GÜNCELLEME (Danışman Değerlendirmesi Sonrası)
-
-Bu projenin model seçim süreci, bir danışman/hoca değerlendirmesi sonrası ciddi
-metodolojik sorunlar nedeniyle **baştan kurulmuştur**. Özet:
-
-- **Eski süreç (ARTIK GEÇERSİZ):** Model seçimi 6 algoritmayı doğrudan saklı dış test
-  setinde karşılaştırıp en iyisini seçiyordu (test seti sızıntısı); hava durumu
-  değişkenleri (zamansal sızıntı riski taşıyan 22 öznitelik) modelde kalmıştı;
-  modeller birbirinden farklı (tutarsız) dengesizlik stratejileriyle eğitiliyordu.
-- **Yeni süreç:** Model seçimi SADECE eğitim seti + 5 katlı CV ile yapılıyor
-  (`kodlar/26-32` scriptleri); hava durumu değişkenleri tamamen çıkarılmış;
-  tüm modeller aynı koşulda karşılaştırılmıştır. Saklı dış test seti yalnızca
-  TEK SEFER, seçim tamamlandıktan sonra açılmıştır.
-- **Güncel şampiyon:** Random Forest (yeniden optimize edilmiş), Dış Test
-  ROC-AUC=0,7753. Detaylar ve tam gerekçe için bkz.
-  `raporlar/Bulgular_v2_Duzeltilmis_DanismanElestirisi.docx` — bu belge,
-  önceki `raporlar/Makale_Bulgular_Bolumu.docx` belgesinin YERİNE geçer.
-- **Değişmeyen kritik bulgu:** Modelin gerçek kronolojik (ileri yönlü) doğrulamada
-  yazı-tura seviyesine (ROC-AUC≈0,53) düştüğü bulgusu, yeni modelle de aynen
-  geçerlidir (bkz. `kodlar/25_kronolojik_genelleme_analizi.py`).
