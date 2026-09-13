@@ -59,7 +59,7 @@ Ayrıntılı sıra için `kodlar/PIPELINE_SIRASI.md` dosyasına bakınız. Özet
 
 ## Ek Analizler
 
-- **Karar eğrisi analizi (script 37):** Model, makul eşik aralığında "hepsine/hiçbirine müdahale" stratejilerinden daha yüksek klinik net fayda sağlar.
+- **Karar eğrisi analizi (script 37):** Model, kabul edilebilir eşik aralığında "hepsine/hiçbirine müdahale" stratejilerinden daha yüksek klinik net fayda sağlar.
 - **Alt-grup adalet (script 38):** Cinsiyet ve yaş grupları arası ROC-AUC farkı yalnızca 0,029; model gruplar arası tutarlıdır.
 - **Takvim özniteliği ablasyonu (script 42):** Takvim özniteliklerinin çıkarılması satır-rastgele ve hasta-ayrık bölmede performansı belirgin biçimde düşürürken, kronolojik bölmede etkisi marjinaldir; bu, kronolojik senaryoda takvim sinyalinin zaten genellenemediğini doğrulamaktadır.
 - **Vekil kimlik duyarlılık analizi (script 43–44):** Doğum tarihi eksik gözlemlerin tek bir ortak kimlik altında gruplanması, hasta-ayrık bölmede yapay bir kararsızlığa yol açtığı tespit edilmiş ve düzeltilmiştir; düzeltme sonrası çakışma oranı %2,11'den %0,09'a düşmüştür.
